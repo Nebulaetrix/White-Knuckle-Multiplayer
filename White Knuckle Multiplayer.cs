@@ -1,0 +1,46 @@
+﻿using BepInEx;
+using BepInEx.Logging;
+using UnityEngine.SceneManagement;
+using Unity.Netcode;
+using White_Knuckle_Multiplayer.Networking;
+
+namespace White_Knuckle_Multiplayer
+{
+    [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
+    public class WkMultiplayer : BaseUnityPlugin
+    {
+        private ManualLogSource logger;
+        private bool loaded = false;
+
+        public static MultiplayerManager MultiplayerManager;
+        private CommandManager commandManager;
+
+        private void Awake()
+        {
+            logger = base.Logger;
+
+            MultiplayerManager = new MultiplayerManager(logger);
+
+            SceneManager.sceneLoaded += OnSceneLoad;
+
+            Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+        }
+
+        private void OnSceneLoad(Scene scene, LoadSceneMode mode)
+        {
+            if (loaded || scene.name != "Game-Main")
+                return;
+
+            MultiplayerManager.SpawnNetworkManager();
+            commandManager = new CommandManager(MultiplayerManager, logger, NetworkManager.Singleton.GetComponent<CoroutineRunner>());
+            
+            NetworkManager.Singleton.LogLevel = Unity.Netcode.LogLevel.Developer;
+            
+            CommandConsole.AddCommand("host", commandManager.HandleHostCommand, false);
+            CommandConsole.AddCommand("join", commandManager.HandleJoinCommand, false);
+            CommandConsole.AddCommand("disconnect", commandManager.HandleDisconnectCommand, false);
+
+            loaded = true;
+        }
+    }
+}
