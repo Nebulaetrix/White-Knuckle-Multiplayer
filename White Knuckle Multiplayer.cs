@@ -28,19 +28,29 @@ namespace White_Knuckle_Multiplayer
 
         private void OnSceneLoad(Scene scene, LoadSceneMode mode)
         {
-            if (loaded || scene.name != "Game-Main")
-                return;
+            switch (loaded)
+            {
+                case false when scene.name == "Game-Main":
+                    MultiplayerManager.SpawnNetworkManager();
+                    commandManager = new CommandManager(MultiplayerManager, logger,
+                        NetworkManager.Singleton.GetComponent<CoroutineRunner>());
 
-            MultiplayerManager.SpawnNetworkManager();
-            commandManager = new CommandManager(MultiplayerManager, logger, NetworkManager.Singleton.GetComponent<CoroutineRunner>());
-            
-            NetworkManager.Singleton.LogLevel = Unity.Netcode.LogLevel.Developer;
-            
+                    NetworkManager.Singleton.LogLevel = Unity.Netcode.LogLevel.Developer;
+                    AddCommands();
+                    loaded = true;
+                    break;
+                
+                case true when scene.name == "Game-Main":
+                    AddCommands();
+                    break;
+            }
+        }
+
+        private void AddCommands()
+        {
             CommandConsole.AddCommand("host", commandManager.HandleHostCommand, false);
             CommandConsole.AddCommand("join", commandManager.HandleJoinCommand, false);
             CommandConsole.AddCommand("disconnect", commandManager.HandleDisconnectCommand, false);
-
-            loaded = true;
         }
     }
 }

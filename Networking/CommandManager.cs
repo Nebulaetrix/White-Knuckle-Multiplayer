@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using BepInEx.Logging;
 using Steamworks;
+using Steamworks.Data;
 using Unity.Netcode;
 using UnityEngine;
+using White_Knuckle_Multiplayer.deps;
+using White_Knuckle_Multiplayer.Listeners;
 
 namespace White_Knuckle_Multiplayer.Networking
 {
@@ -46,9 +50,11 @@ namespace White_Knuckle_Multiplayer.Networking
         
         public void HandleDisconnectCommand(string[] args)
         {
-            LeaveLobbyAndDisconnectClient();
+            ShutdownHostAndDisconnectClients();
         }
 
+        
+        
         
         private IEnumerator CreateLobbyAndHostGame()
         {
@@ -60,26 +66,7 @@ namespace White_Knuckle_Multiplayer.Networking
                 yield break;
             }
 
-            var lobbyCreation = SteamMatchmaking.CreateLobbyAsync(4);
-            while (!lobbyCreation.IsCompleted)
-                yield return null;
-
-            if (lobbyCreation.Result.HasValue)
-            {
-                var lobby = lobbyCreation.Result.Value;
-                lobby.SetData("name", SteamClient.Name + "'s Lobby");
-                lobby.SetData("owner", SteamClient.SteamId.ToString());
-
-                CommandConsole.Log("Lobby created. Starting host...");
-                logger.LogDebug("Lobby created. Starting host...");
-                
-                multiplayerManager.StartHost();
-            }
-            else
-            {
-                CommandConsole.LogError("Failed to create Steam lobby.");
-                logger.LogError("Failed to create Steam lobby.");
-            }
+            multiplayerManager.StartHost();
         }
 
         private void JoinLobbyAndStartClient(ulong steamId)
@@ -112,7 +99,7 @@ namespace White_Knuckle_Multiplayer.Networking
             }
         }
 
-        private void LeaveLobbyAndDisconnectClient()
+        /*private void LeaveLobbyAndDisconnectClient()
         {
             var transport = multiplayerManager.GetTransport();
 
@@ -122,7 +109,7 @@ namespace White_Knuckle_Multiplayer.Networking
                 logger.LogError("Steam not initialized.");
                 return;
             }
-            
+
             if (transport == null)
             {
                 logger.LogError("Transport unavailable.");
@@ -137,12 +124,41 @@ namespace White_Knuckle_Multiplayer.Networking
                 logger.LogWarning("You are not connected to a lobby or server.");
                 return;
             }
-            multiplayerManager.Shutdown();
+
+            if (Lobby.Id.IsValid)
+            {
+                Lobby.Leave();
+                logger.LogDebug($"Left Steam lobby {Lobby.Id}.");
+                CommandConsole.Log($"Left Steam lobby {Lobby.Id}.");
+                Lobby = default;
+            }
+            try
+            {
+                NetworkManager.Singleton.Shutdown();
+            }
+            catch (Exception ex)
+            {
+                CommandConsole.LogError($"Client shutdown error: {ex.Message}");
+                logger.LogError($"Client shutdown error: {ex.Message}");
+            }
+
+        }*/
+
+        private void ShutdownHostAndDisconnectClients()
+        {
+            logger.LogInfo(
+                $"Shutting down host and disconnecting {multiplayerManager.Listener.ConnectedClientIds.Count} client(s)...");
             
-            CommandConsole.Log("Disconnected from server/lobby.");
-            logger.LogInfo("Disconnected from server/lobby.");
+            var connectedClientsList = multiplayerManager.Listener.ConnectedClientIds;
+            
+            foreach (var connectionId in connectedClientsList)
+            {
+                multiplayerManager.Transport.CloseConnectionWithClient(connectionId);
+            }
+
+            NetworkManager.Singleton.Shutdown();
+            logger.LogInfo("Host and all client connections shut down.");
         }
-        
         
     }
 }

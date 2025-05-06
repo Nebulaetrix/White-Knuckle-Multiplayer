@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Steamworks;
 using Steamworks.Data;
 using Unity.Collections;
@@ -265,12 +266,12 @@ namespace White_Knuckle_Multiplayer.deps
         void ISocketManager.OnDisconnected(SocketConnection connection, ConnectionInfo info)
         {
             if (connectedClients.Remove(connection.Id))
-	    {
-	        InvokeOnTransportEvent(NetworkEvent.Disconnect, connection.Id, default, Time.realtimeSinceStartup);
+	        {
+	            InvokeOnTransportEvent(NetworkEvent.Disconnect, connection.Id, default, Time.realtimeSinceStartup);
 
-	       if (LogLevel <= LogLevel.Developer)
+	            if (LogLevel <= LogLevel.Developer)
                     Debug.Log($"[{nameof(FacepunchTransport)}] - Disconnected Steam user {info.Identity.SteamId}");
-	    }
+	        }
      	    else if (LogLevel <= LogLevel.Normal)
                 Debug.LogWarning($"[{nameof(FacepunchTransport)}] - Failed to diconnect client with ID {connection.Id}, client not connected.");
         }
@@ -305,7 +306,19 @@ namespace White_Knuckle_Multiplayer.deps
             if (LogLevel <= LogLevel.Developer)
                 Debug.Log($"[{nameof(FacepunchTransport)}] - Fetched user Steam ID.");
         }
-
+        internal void CloseConnectionWithClient(ulong clientId)
+        {
+            if (connectedClients.TryGetValue(clientId, out Client user))
+            {
+                SteamNetworking.CloseP2PSessionWithUser(user.steamId);
+                Debug.Log($"[{nameof(FacepunchTransport)}] Closed P2P session with client {user.steamId}");
+            }
+            else
+            {
+                Debug.Log($"[{nameof(FacepunchTransport)}] Client with connection {clientId} not found in the connectedClients dictionary.");
+            }
+        }
+        
         #endregion
     }
 }

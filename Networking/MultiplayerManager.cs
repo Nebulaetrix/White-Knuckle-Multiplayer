@@ -14,9 +14,9 @@ namespace White_Knuckle_Multiplayer.Networking
     public class MultiplayerManager(ManualLogSource logger)
     {
         private NetworkManager manager;
-        private FacepunchTransport transport;
+        internal FacepunchTransport Transport;
         internal TransportListener Listener;
-        public FacepunchTransport GetTransport() => transport;
+        public FacepunchTransport GetTransport() => Transport;
 
         public void SpawnNetworkManager()
         {
@@ -27,14 +27,14 @@ namespace White_Knuckle_Multiplayer.Networking
             Object.DontDestroyOnLoad(netObj);
 
             manager = netObj.AddComponent<NetworkManager>();
-            transport = netObj.AddComponent<FacepunchTransport>();
+            Transport = netObj.AddComponent<FacepunchTransport>();
             
             Listener = netObj.AddComponent<TransportListener>();
             netObj.AddComponent<CoroutineRunner>();
 
-            manager.NetworkConfig = new NetworkConfig
+            NetworkManager.Singleton.NetworkConfig = new NetworkConfig
             {
-                NetworkTransport = transport
+                NetworkTransport = Transport
             };
 
             logger.LogInfo("Created NetworkManager");
@@ -73,28 +73,30 @@ namespace White_Knuckle_Multiplayer.Networking
             Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera").GetComponent<PostProcessVolume>());
             Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera").GetComponent<PostProcessLayer>());
             Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera").GetComponent<Camera>());
+            Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera").GetComponent<CameraShaderController>());
             Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera").GetComponent<CRTEffect>());
             Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera").GetComponent<Camera>());
+            Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera").GetComponent<CameraShaderController>());
             Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory").gameObject);
             Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/InventoryBagCamera").gameObject);
             
             // TODO: Write code to destroy MantleCheckpoint, every 1st child except camera
             
 
-            manager.NetworkConfig.PlayerPrefab = playerPrefab;
+            NetworkManager.Singleton.NetworkConfig.PlayerPrefab = playerPrefab;
             logger.LogDebug("Player Prefab created");
         }
 
         public void StartHost()
         {
-            if (manager == null) return;
+            if (NetworkManager.Singleton == null) return;
 
             CreatePlayerPrefab();
 
             logger.LogDebug("Starting Host...");
             try
             {
-                manager.StartHost();
+                NetworkManager.Singleton.StartHost();
                 
                 CommandConsole.Log("Host started!");
                 logger.LogInfo("Host started!");
@@ -108,14 +110,14 @@ namespace White_Knuckle_Multiplayer.Networking
         
         public void StartClient()
         {
-            if (manager == null) return;
+            if (NetworkManager.Singleton == null) return;
 
             CreatePlayerPrefab();
             
             logger.LogDebug("Starting Client...");
             try
             {
-                manager.StartClient();
+                NetworkManager.Singleton.StartClient();
                 CommandConsole.Log("Client started!");
                 logger.LogInfo("Client started!");
             }
@@ -125,42 +127,33 @@ namespace White_Knuckle_Multiplayer.Networking
             }
         }
 
-        public void Shutdown()
-        {
-            if (manager == null) return;
-            
-            manager.Shutdown();
-        }
-
         public void OnClientConnect(ulong clientId)
         {
-            if (SteamClient.SteamId != clientId)
+            if ((ulong)SteamClient.SteamId == clientId)
             {
-                if (manager.NetworkConfig.PlayerPrefab == null)
-                {
-                    logger.LogError("Player prefab not registered!");
-                    return;
-                }
+                logger.LogError("Cannot instantiate self!");
+                return;
+            }
+            
+            if (NetworkManager.Singleton.NetworkConfig.PlayerPrefab == null)
+            {
+                logger.LogError("Player prefab not registered!");
+                return;
+            }
 
-                GameObject player = Object.Instantiate(NetworkManager.Singleton.NetworkConfig.PlayerPrefab);
-                player.SetActive(true);
+            GameObject player = Object.Instantiate(NetworkManager.Singleton.NetworkConfig.PlayerPrefab);
+            player.SetActive(true);
 
-                var networkObject = player.GetComponent<NetworkObject>();
-                networkObject.name= $"CL_Player_Network_Prefab({clientId})";
-                if (networkObject != null)
-                {
-                    networkObject.SpawnAsPlayerObject(clientId);
-                }
-                else
-                {
-                    logger.LogError("Instantiated player missing NetworkObject component!");
-                }
-
-                logger.LogDebug("Client connected to lobby!");
+            var networkObject = player.GetComponent<NetworkObject>();
+            networkObject.name = $"CL_Player_Network_Prefab({clientId})";
+            if (networkObject != null)
+            {
+                networkObject.SpawnAsPlayerObject(clientId);
+                logger.LogInfo("Client connected to lobby!");
             }
             else
             {
-                logger.LogDebug("Cannot instantiate self!");
+                logger.LogError("Instantiated player missing NetworkObject component!");
             }
         }
 
