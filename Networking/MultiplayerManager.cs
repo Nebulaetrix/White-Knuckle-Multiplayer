@@ -13,108 +13,134 @@ namespace White_Knuckle_Multiplayer.Networking
 {
     public class MultiplayerManager(ManualLogSource logger)
     {
-        private NetworkManager manager;
+        private NetworkManager networkManagerInstance;
         internal FacepunchTransport Transport;
         internal TransportListener Listener;
+
+        private const string NetworkManagerObjectName = "NetworkManager";
+        private const string PlayerObjectName = "CL_Player";
+        private const string PlayerPrefabName = "CL_Player_Network_Prefab";
+
         public FacepunchTransport GetTransport() => Transport;
 
-        public void SpawnNetworkManager()
+        public void InitializeNetworkManager()
         {
-            if (NetworkManager.Singleton != null)
-                return;
+            if (NetworkManager.Singleton != null) return;
 
-            GameObject netObj = new GameObject("NetworkManager");
-            Object.DontDestroyOnLoad(netObj);
+            var networkManagerGameObject = new GameObject(NetworkManagerObjectName);
+            Object.DontDestroyOnLoad(networkManagerGameObject);
 
-            manager = netObj.AddComponent<NetworkManager>();
-            Transport = netObj.AddComponent<FacepunchTransport>();
-            
-            Listener = netObj.AddComponent<TransportListener>();
-            netObj.AddComponent<CoroutineRunner>();
+            networkManagerInstance = networkManagerGameObject.AddComponent<NetworkManager>();
+            Transport = networkManagerGameObject.AddComponent<FacepunchTransport>();
+            Listener = networkManagerGameObject.AddComponent<TransportListener>();
+            networkManagerGameObject.AddComponent<CoroutineRunner>();
 
             NetworkManager.Singleton.NetworkConfig = new NetworkConfig
             {
                 NetworkTransport = Transport
             };
 
-            logger.LogInfo("Created NetworkManager");
+            logger.LogInfo("Initialized NetworkManager");
         }
 
-        
         private void CreatePlayerPrefab()
         {
             logger.LogDebug("Creating Player Prefab...");
-            
-            GameObject player = GameObject.Find("CL_Player");
+            GameObject player = GameObject.Find(PlayerObjectName);
             if (player == null)
             {
                 logger.LogError("Cannot start host, no player found!");
                 return;
             }
-            
-            GameObject playerPrefab = Object.Instantiate(player);
-            Object.DontDestroyOnLoad(playerPrefab);
-            playerPrefab.name = "CL_Player_Network_Prefab";
-            playerPrefab.SetActive(false);
 
-            if (playerPrefab.GetComponent<NetworkObject>() == null)
-                playerPrefab.AddComponent<NetworkObject>();
-
-            if (playerPrefab.GetComponent<NetworkTransform>() == null)
-                playerPrefab.AddComponent<NetworkTransform>();
-
-            //playerPrefab.GetComponent<NetworkTransform>().UseQuaternionSynchronization = true;
-
-            Object.Destroy(playerPrefab.GetComponent<CharacterController>());
-            Object.Destroy(playerPrefab.GetComponent<Inventory>());
-            Object.Destroy(playerPrefab.GetComponent<MonoBehaviour>());
-            Object.Destroy(playerPrefab.transform.Find("Main Cam Root").GetComponent<CL_CameraControl>());
-            Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera").GetComponent<CRTEffect>());
-            Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera").GetComponent<PostProcessVolume>());
-            Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera").GetComponent<PostProcessLayer>());
-            Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera").GetComponent<Camera>());
-            Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera").GetComponent<CameraShaderController>());
-            Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera").GetComponent<CRTEffect>());
-            Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera").GetComponent<Camera>());
-            Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera").GetComponent<CameraShaderController>());
-            Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory").gameObject);
-            Object.Destroy(playerPrefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/InventoryBagCamera").gameObject);
-            
-            // TODO: Write code to destroy MantleCheckpoint, every 1st child except camera
-            
+            GameObject playerPrefab = InstantiatePlayerPrefab(player);
+            DestroyUnwantedComponents(playerPrefab);
 
             NetworkManager.Singleton.NetworkConfig.PlayerPrefab = playerPrefab;
             logger.LogDebug("Player Prefab created");
         }
 
+        private GameObject InstantiatePlayerPrefab(GameObject player)
+        {
+            GameObject prefab = Object.Instantiate(player);
+            Object.DontDestroyOnLoad(prefab);
+
+            prefab.name = PlayerPrefabName;
+            prefab.SetActive(false);
+
+            if (prefab.GetComponent<NetworkObject>() == null)
+                prefab.AddComponent<NetworkObject>();
+            if (prefab.GetComponent<NetworkTransform>() == null)
+                prefab.AddComponent<NetworkTransform>();
+
+            return prefab;
+        }
+
+        private void DestroyUnwantedComponents(GameObject prefab)
+        {
+            Object.Destroy(prefab.GetComponent<CharacterController>());
+            Object.Destroy(prefab.GetComponent<Inventory>());
+            Object.Destroy(prefab.GetComponent<MonoBehaviour>());
+
+            var unwantedCameraComponents = new[]
+            {
+                "Main Cam Root", "Main Cam Root/Main Camera Shake Root/Main Camera",
+                "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera"
+            };
+
+            foreach (var path in unwantedCameraComponents)
+            {
+                var camObject = prefab.transform.Find(path);
+                if (camObject != null)
+                {
+                    Object.Destroy(camObject.GetComponent<CRTEffect>());
+                    Object.Destroy(camObject.GetComponent<PostProcessVolume>());
+                    Object.Destroy(camObject.GetComponent<PostProcessLayer>());
+                    Object.Destroy(camObject.GetComponent<Camera>());
+                    Object.Destroy(camObject.GetComponent<CameraShaderController>());
+                }
+            }
+
+            var unwantedGameObjects = new[]
+            {
+                "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory",
+                "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/InventoryBagCamera",
+                "Main Cam Target", "Capsule", "Particle System", "Wind Sound", "Fatigue Sound",
+                "CorruptionSurround", "Aim Circle", "Fake Handholds", "FXCam", "EffectRoot", "Death Sound"
+            };
+
+            foreach (var path in unwantedGameObjects)
+            {
+                var unwantedObject = prefab.transform.Find(path);
+                if (unwantedObject != null) Object.Destroy(unwantedObject.gameObject);
+            }
+        }
+
         public void StartHost()
         {
             if (NetworkManager.Singleton == null) return;
-
             CreatePlayerPrefab();
-
             logger.LogDebug("Starting Host...");
+
             try
             {
                 NetworkManager.Singleton.StartHost();
-                
                 CommandConsole.Log("Host started!");
                 logger.LogInfo("Host started!");
             }
             catch (Exception ex)
             {
-                CommandConsole.LogError($"Unable to initialise host! Ex:{ex}");
-                logger.LogError($"Unable to initialise host! Ex:{ex}");
+                CommandConsole.LogError($"Unable to initialize host! Ex:{ex}");
+                logger.LogError($"Unable to initialize host! Ex:{ex}");
             }
         }
-        
+
         public void StartClient()
         {
             if (NetworkManager.Singleton == null) return;
-
             CreatePlayerPrefab();
-            
             logger.LogDebug("Starting Client...");
+
             try
             {
                 NetworkManager.Singleton.StartClient();
@@ -123,7 +149,7 @@ namespace White_Knuckle_Multiplayer.Networking
             }
             catch (Exception ex)
             {
-                logger.LogError($"Unable to initialise client! Ex:{ex}");
+                logger.LogError($"Unable to initialize client! Ex:{ex}");
             }
         }
 
@@ -134,7 +160,7 @@ namespace White_Knuckle_Multiplayer.Networking
                 logger.LogError("Cannot instantiate self!");
                 return;
             }
-            
+
             if (NetworkManager.Singleton.NetworkConfig.PlayerPrefab == null)
             {
                 logger.LogError("Player prefab not registered!");
@@ -145,21 +171,20 @@ namespace White_Knuckle_Multiplayer.Networking
             player.SetActive(true);
 
             var networkObject = player.GetComponent<NetworkObject>();
-            networkObject.name = $"CL_Player_Network_Prefab({clientId})";
-            if (networkObject != null)
-            {
-                networkObject.SpawnAsPlayerObject(clientId);
-                logger.LogInfo("Client connected to lobby!");
-            }
-            else
+            if (networkObject == null)
             {
                 logger.LogError("Instantiated player missing NetworkObject component!");
+                return;
             }
+
+            networkObject.name = $"{PlayerPrefabName}({clientId})";
+            networkObject.SpawnAsPlayerObject(clientId);
+            logger.LogInfo("Client connected to lobby!");
         }
 
         public void OnClientDisconnect(ulong clientId)
         {
-            Object.Destroy(GameObject.Find($"CL_Player_Network_Prefab({clientId})"));
+            Object.Destroy(GameObject.Find($"{PlayerPrefabName}({clientId})"));
         }
     }
 }

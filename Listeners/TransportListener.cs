@@ -57,14 +57,6 @@ public class TransportListener : MonoBehaviour
         if (ConnectedClientIds.Count > 0)
             return true;
         
-        // Maybe check more strictly in the future?
-        /*foreach (var id in connectedClients)
-        {
-            Debug.Log($"ID: {id}, Client ID: {clientId}");
-            if (id == clientId)
-                return true;
-                
-        }*/
         return false;
     }
 }

@@ -306,18 +306,6 @@ namespace White_Knuckle_Multiplayer.deps
             if (LogLevel <= LogLevel.Developer)
                 Debug.Log($"[{nameof(FacepunchTransport)}] - Fetched user Steam ID.");
         }
-        internal void CloseConnectionWithClient(ulong clientId)
-        {
-            if (connectedClients.TryGetValue(clientId, out Client user))
-            {
-                SteamNetworking.CloseP2PSessionWithUser(user.steamId);
-                Debug.Log($"[{nameof(FacepunchTransport)}] Closed P2P session with client {user.steamId}");
-            }
-            else
-            {
-                Debug.Log($"[{nameof(FacepunchTransport)}] Client with connection {clientId} not found in the connectedClients dictionary.");
-            }
-        }
         
         #endregion
     }

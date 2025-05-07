@@ -31,7 +31,7 @@ namespace White_Knuckle_Multiplayer
             switch (loaded)
             {
                 case false when scene.name == "Game-Main":
-                    MultiplayerManager.SpawnNetworkManager();
+                    MultiplayerManager.InitializeNetworkManager();
                     commandManager = new CommandManager(MultiplayerManager, logger,
                         NetworkManager.Singleton.GetComponent<CoroutineRunner>());
 
