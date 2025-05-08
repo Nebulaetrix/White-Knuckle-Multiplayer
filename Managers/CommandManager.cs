@@ -6,10 +6,10 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace White_Knuckle_Multiplayer.Networking;
-    public class CommandManager
+namespace White_Knuckle_Multiplayer.Managers;
+public class CommandManager
 {
-    private readonly MultiplayerManager multiplayerManager;
+    private readonly GameManager gameManager;
     private readonly ManualLogSource logger;
     private readonly MonoBehaviour coroutineHost;
 
@@ -20,9 +20,9 @@ namespace White_Knuckle_Multiplayer.Networking;
     private const string MessageShutdown = "Shutting down host and disconnecting all clients...";
     private const string SceneMainMenu = "Main-Menu";
 
-    public CommandManager(MultiplayerManager multiplayerManager, ManualLogSource logger, MonoBehaviour coroutineHost)
+    public CommandManager(GameManager gameManager, ManualLogSource logger, MonoBehaviour coroutineHost)
     {
-        this.multiplayerManager = multiplayerManager;
+        this.gameManager = gameManager;
         this.logger = logger;
         this.coroutineHost = coroutineHost;
     }
@@ -50,14 +50,14 @@ namespace White_Knuckle_Multiplayer.Networking;
     {
         if (!IsSteamClientValid()) yield break;
 
-        multiplayerManager.StartHost();
+        gameManager.StartHost();
     }
 
     private void JoinLobbyAndStartClient(ulong steamId)
     {
         if (!IsSteamClientValid()) return;
 
-        var transport = multiplayerManager.GetTransport();
+        var transport = gameManager.GetTransport();
         if (transport == null)
         {
             LogError(ErrorTransportUnavailable);
@@ -68,7 +68,7 @@ namespace White_Knuckle_Multiplayer.Networking;
 
         try
         {
-            multiplayerManager.StartClient();
+            gameManager.StartClient();
         }
         catch (Exception ex)
         {
