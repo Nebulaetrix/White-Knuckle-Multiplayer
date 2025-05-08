@@ -51,6 +51,13 @@ namespace White_Knuckle_Multiplayer
             CommandConsole.AddCommand("host", commandManager.HandleHostCommand, false);
             CommandConsole.AddCommand("join", commandManager.HandleJoinCommand, false);
             CommandConsole.AddCommand("disconnect", commandManager.HandleDisconnectCommand, false);
+            
+            // Add local commands for testing without Steam
+            CommandConsole.AddCommand("localhost", commandManager.HandleLocalHostCommand, false);
+            CommandConsole.AddCommand("localjoin", commandManager.HandleLocalJoinCommand, false);
+            CommandConsole.AddCommand("netinfo", commandManager.HandleNetworkInfoCommand, false);
+            CommandConsole.AddCommand("help", commandManager.HandleHelpCommand, false);
+            CommandConsole.AddCommand("testnet", commandManager.HandleTestConnectionCommand, false);
         }
     }
 }

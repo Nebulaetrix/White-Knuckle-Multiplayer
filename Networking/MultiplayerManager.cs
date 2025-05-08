@@ -155,31 +155,33 @@ namespace White_Knuckle_Multiplayer.Networking
 
         public void OnClientConnect(ulong clientId)
         {
-            if ((ulong)SteamClient.SteamId == clientId)
+            // Allow players to control their own player when using direct IP
+            if (Transport.useDirectIP || (ulong)SteamClient.SteamId != clientId)
             {
-                logger.LogError("Cannot instantiate self!");
-                return;
-            }
+                if (NetworkManager.Singleton.NetworkConfig.PlayerPrefab == null)
+                {
+                    logger.LogError("Player prefab not registered!");
+                    return;
+                }
 
-            if (NetworkManager.Singleton.NetworkConfig.PlayerPrefab == null)
+                GameObject player = Object.Instantiate(NetworkManager.Singleton.NetworkConfig.PlayerPrefab);
+                player.SetActive(true);
+
+                var networkObject = player.GetComponent<NetworkObject>();
+                if (networkObject == null)
+                {
+                    logger.LogError("Instantiated player missing NetworkObject component!");
+                    return;
+                }
+
+                networkObject.name = $"{PlayerPrefabName}({clientId})";
+                networkObject.SpawnAsPlayerObject(clientId);
+                logger.LogInfo("Client connected to lobby!");
+            }
+            else
             {
-                logger.LogError("Player prefab not registered!");
-                return;
+                logger.LogError("Cannot instantiate self in Steam mode!");
             }
-
-            GameObject player = Object.Instantiate(NetworkManager.Singleton.NetworkConfig.PlayerPrefab);
-            player.SetActive(true);
-
-            var networkObject = player.GetComponent<NetworkObject>();
-            if (networkObject == null)
-            {
-                logger.LogError("Instantiated player missing NetworkObject component!");
-                return;
-            }
-
-            networkObject.name = $"{PlayerPrefabName}({clientId})";
-            networkObject.SpawnAsPlayerObject(clientId);
-            logger.LogInfo("Client connected to lobby!");
         }
 
         public void OnClientDisconnect(ulong clientId)
