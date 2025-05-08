@@ -1,4 +1,4 @@
-/deps
+/deps/*.dll
 !/deps/FacepunchTransport.cs
 
 /bin

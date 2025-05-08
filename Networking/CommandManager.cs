@@ -173,13 +173,7 @@ namespace White_Knuckle_Multiplayer.Networking
                 multiplayerManager.InitializeNetworkManager();
                 
                 // Configure transport for direct IP
-            var transport = multiplayerManager.GetTransport();
-                if (transport != null)
-                {
-                    transport.useDirectIP = true;
-                    transport.directIPPort = port;
-                    logger.LogInfo($"Configured transport for direct IP on port {port}");
-                }
+                multiplayerManager.SetupDirectIP(true, null, port);
                 
                 // Start the host
                 multiplayerManager.StartHost();
@@ -208,14 +202,7 @@ namespace White_Knuckle_Multiplayer.Networking
                 multiplayerManager.InitializeNetworkManager();
                 
                 // Configure transport for direct IP
-                var transport = multiplayerManager.GetTransport();
-                if (transport != null)
-                {
-                    transport.useDirectIP = true;
-                    transport.directIPAddress = hostIp;
-                    transport.directIPPort = port;
-                    logger.LogInfo($"Configured transport for direct IP connection to {hostIp}:{port}");
-                }
+                multiplayerManager.SetupDirectIP(true, hostIp, port);
                 
                 // Start the client
                 multiplayerManager.StartClient();
@@ -284,24 +271,21 @@ namespace White_Knuckle_Multiplayer.Networking
                         var transport = NetworkManager.Singleton.NetworkConfig.NetworkTransport;
                         CommandConsole.Log($"Transport Type: {transport.GetType().Name}");
                         
-                        // FacepunchTransport specific info
-                        if (transport is FacepunchTransport facepunch)
+                        // Display transport-specific info
+                        if (transport is DirectIPTransport directIP)
                         {
-                            if (facepunch.useDirectIP)
+                            CommandConsole.Log($"Using direct IP mode on port {directIP.port}");
+                            if (NetworkManager.Singleton.IsClient)
                             {
-                                CommandConsole.Log($"Using direct IP mode on port {facepunch.directIPPort}");
-                                if (NetworkManager.Singleton.IsClient)
-                                {
-                                    CommandConsole.Log($"Connected to: {facepunch.directIPAddress}");
-                                }
+                                CommandConsole.Log($"Connected to: {directIP.ipAddress}");
                             }
-                            else
+                        }
+                        else if (transport is FacepunchTransport steamTransport)
+                        {
+                            CommandConsole.Log("Using Steam networking mode");
+                            if (NetworkManager.Singleton.IsClient)
                             {
-                                CommandConsole.Log("Using Steam networking mode");
-                                if (NetworkManager.Singleton.IsClient)
-                                {
-                                    CommandConsole.Log($"Connected to Steam ID: {facepunch.targetSteamId}");
-                                }
+                                CommandConsole.Log($"Connected to Steam ID: {steamTransport.targetSteamId}");
                             }
                         }
                         

@@ -3,25 +3,70 @@ using BepInEx.Logging;
 using Steamworks;
 using Unity.Netcode;
 using Unity.Netcode.Components;
+using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 using White_Knuckle_Multiplayer.deps;
 using White_Knuckle_Multiplayer.Listeners;
 using Object = UnityEngine.Object;
+using System.Linq;
 
 namespace White_Knuckle_Multiplayer.Networking
 {
     public class MultiplayerManager(ManualLogSource logger)
     {
         private NetworkManager networkManagerInstance;
-        internal FacepunchTransport Transport;
+        internal FacepunchTransport SteamTransport;
+        internal DirectIPTransport DirectIPTransport;
         internal TransportListener Listener;
+        
+        private bool useDirectIP = false;
 
         private const string NetworkManagerObjectName = "NetworkManager";
         private const string PlayerObjectName = "CL_Player";
         private const string PlayerPrefabName = "CL_Player_Network_Prefab";
 
-        public FacepunchTransport GetTransport() => Transport;
+        // Get the appropriate transport based on connection type
+        public NetworkTransport GetTransport()
+        {
+            return useDirectIP ? DirectIPTransport as NetworkTransport : SteamTransport as NetworkTransport;
+        }
+        
+        // Get steam transport specifically
+        public FacepunchTransport GetSteamTransport() => SteamTransport;
+        
+        // Get direct IP transport specifically
+        public DirectIPTransport GetDirectIPTransport() => DirectIPTransport;
+        
+        // Configure for direct IP connections
+        public void SetupDirectIP(bool enabled, string ipAddress = null, ushort port = 7777)
+        {
+            useDirectIP = enabled;
+            
+            if (enabled && DirectIPTransport != null)
+            {
+                DirectIPTransport.ipAddress = ipAddress ?? "127.0.0.1";
+                DirectIPTransport.port = port;
+                
+                // Set the transport in NetworkManager
+                if (NetworkManager.Singleton != null)
+                {
+                    NetworkManager.Singleton.NetworkConfig.NetworkTransport = DirectIPTransport;
+                }
+                
+                logger.LogInfo($"Configured for Direct IP: {(ipAddress ?? "127.0.0.1")}:{port}");
+            }
+            else if (!enabled && SteamTransport != null)
+            {
+                // Set the transport in NetworkManager
+                if (NetworkManager.Singleton != null)
+                {
+                    NetworkManager.Singleton.NetworkConfig.NetworkTransport = SteamTransport;
+                }
+                
+                logger.LogInfo("Configured for Steam networking");
+            }
+        }
 
         public void InitializeNetworkManager()
         {
@@ -31,13 +76,18 @@ namespace White_Knuckle_Multiplayer.Networking
             Object.DontDestroyOnLoad(networkManagerGameObject);
 
             networkManagerInstance = networkManagerGameObject.AddComponent<NetworkManager>();
-            Transport = networkManagerGameObject.AddComponent<FacepunchTransport>();
+            
+            // Add both transports
+            SteamTransport = networkManagerGameObject.AddComponent<FacepunchTransport>();
+            DirectIPTransport = networkManagerGameObject.AddComponent<DirectIPTransport>();
+            
             Listener = networkManagerGameObject.AddComponent<TransportListener>();
             networkManagerGameObject.AddComponent<CoroutineRunner>();
 
+            // Set the default transport based on useDirectIP flag
             NetworkManager.Singleton.NetworkConfig = new NetworkConfig
             {
-                NetworkTransport = Transport
+                NetworkTransport = useDirectIP ? DirectIPTransport as NetworkTransport : SteamTransport as NetworkTransport
             };
 
             logger.LogInfo("Initialized NetworkManager");
@@ -155,33 +205,25 @@ namespace White_Knuckle_Multiplayer.Networking
 
         public void OnClientConnect(ulong clientId)
         {
-            // Allow players to control their own player when using direct IP
-            if (Transport.useDirectIP || (ulong)SteamClient.SteamId != clientId)
+            if (NetworkManager.Singleton.NetworkConfig.PlayerPrefab == null)
             {
-                if (NetworkManager.Singleton.NetworkConfig.PlayerPrefab == null)
-                {
-                    logger.LogError("Player prefab not registered!");
-                    return;
-                }
-
-                GameObject player = Object.Instantiate(NetworkManager.Singleton.NetworkConfig.PlayerPrefab);
-                player.SetActive(true);
-
-                var networkObject = player.GetComponent<NetworkObject>();
-                if (networkObject == null)
-                {
-                    logger.LogError("Instantiated player missing NetworkObject component!");
-                    return;
-                }
-
-                networkObject.name = $"{PlayerPrefabName}({clientId})";
-                networkObject.SpawnAsPlayerObject(clientId);
-                logger.LogInfo("Client connected to lobby!");
+                logger.LogError("Player prefab not registered!");
+                return;
             }
-            else
+
+            GameObject player = Object.Instantiate(NetworkManager.Singleton.NetworkConfig.PlayerPrefab);
+            player.SetActive(true);
+
+            var networkObject = player.GetComponent<NetworkObject>();
+            if (networkObject == null)
             {
-                logger.LogError("Cannot instantiate self in Steam mode!");
+                logger.LogError("Instantiated player missing NetworkObject component!");
+                return;
             }
+
+            networkObject.name = $"{PlayerPrefabName}({clientId})";
+            networkObject.SpawnAsPlayerObject(clientId);
+            logger.LogInfo($"Player spawned for client ID: {clientId}");
         }
 
         public void OnClientDisconnect(ulong clientId)

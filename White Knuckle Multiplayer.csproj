@@ -29,9 +29,6 @@
     <Reference Include="Facepunch.Steamworks.Win64">
       <HintPath>deps\Facepunch.Steamworks.Win64.dll</HintPath>
     </Reference>
-    <Reference Include="Unity.Collections">
-      <HintPath>deps\Unity.Collections.dll</HintPath>
-    </Reference>
     <Reference Include="Unity.Mathematics">
       <HintPath>deps\Unity.Mathematics.dll</HintPath>
     </Reference>
