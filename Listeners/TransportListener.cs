@@ -1,16 +1,18 @@
-﻿using System.Collections.Generic;
-using Steamworks;
+﻿﻿using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using White_Knuckle_Multiplayer.deps;
+using White_Knuckle_Multiplayer.Networking;
 
 namespace White_Knuckle_Multiplayer.Listeners;
 
-public class TransportListener(List<SteamId> connectedClients) : MonoBehaviour
+public class TransportListener : MonoBehaviour
 {
+    internal readonly List<ulong> ConnectedClientIds = [];
+    private FacepunchTransport transport;
     private void Start()
     {
-        var transport = NetworkManager.Singleton.NetworkConfig.NetworkTransport as FacepunchTransport;
+        transport = NetworkManager.Singleton.NetworkConfig.NetworkTransport as FacepunchTransport;
         if (transport != null)
         {
             Debug.Log("Transport listener subscribed");
@@ -20,7 +22,6 @@ public class TransportListener(List<SteamId> connectedClients) : MonoBehaviour
 
     private void OnDestroy()
     {
-        var transport = NetworkManager.Singleton.NetworkConfig.NetworkTransport as FacepunchTransport;
         if (transport != null)
         {
             Debug.Log("Transport listener unsubscribed");
@@ -30,28 +31,32 @@ public class TransportListener(List<SteamId> connectedClients) : MonoBehaviour
 
     private void HandleTransportEvent(NetworkEvent eventType, ulong clientId, System.ArraySegment<byte> payload, float receiveTime)
     {
-        if (eventType == NetworkEvent.Connect)
+        if (WkMultiplayer.GameManager == null)
         {
-            WkMultiplayer.MultiplayerManager.OnClientConnect(clientId);
-            connectedClients.Add(clientId);
-            Debug.Log($"Client connected: {clientId}");
+            Debug.LogError("[TransportListener] MultiplayerManager is NULL!");
+            return;
+        }
+        
+        if (eventType == NetworkEvent.Connect)
+        {   
+            ConnectedClientIds.Add(clientId);
+            WkMultiplayer.GameManager.OnClientConnect(clientId);
+            
         }
         else if (eventType == NetworkEvent.Disconnect)
         {
-            WkMultiplayer.MultiplayerManager.OnClientDisconnect(clientId);
-            Debug.Log($"Client disconnected: {clientId}");
+            ConnectedClientIds.Remove(clientId);
+            WkMultiplayer.GameManager.OnClientDisconnect(clientId);
+            
         }
     }
     
     public bool IsClientConnected(ulong clientId)
     {
-        foreach (var id in connectedClients)
-        {
-            Debug.Log($"ID: {id}, Client ID: {clientId}");
-            if (id == clientId)
-                return true;
-                
-        }
+        Debug.Log($"Connected clients: {ConnectedClientIds.Count}");
+        if (ConnectedClientIds.Count > 0)
+            return true;
+        
         return false;
     }
 }

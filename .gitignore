@@ -1,0 +1,7 @@
+/deps
+!/deps/FacepunchTransport.cs
+
+/bin
+/obj
+
+.idea

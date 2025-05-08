@@ -2,45 +2,55 @@
 using BepInEx.Logging;
 using UnityEngine.SceneManagement;
 using Unity.Netcode;
+using White_Knuckle_Multiplayer.Managers;
 using White_Knuckle_Multiplayer.Networking;
 
-namespace White_Knuckle_Multiplayer
+namespace White_Knuckle_Multiplayer;
+
+[BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
+public class WkMultiplayer : BaseUnityPlugin
 {
-    [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
-    public class WkMultiplayer : BaseUnityPlugin
+    private ManualLogSource logger;
+    private bool loaded = false;
+
+    public static GameManager GameManager;
+    private CommandManager commandManager;
+
+    private void Awake()
     {
-        private ManualLogSource logger;
-        private bool loaded = false;
+        logger = base.Logger;
 
-        public static MultiplayerManager MultiplayerManager;
-        private CommandManager commandManager;
+        GameManager = new GameManager(logger);
 
-        private void Awake()
+        SceneManager.sceneLoaded += OnSceneLoad;
+
+        Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+    }
+
+    private void OnSceneLoad(Scene scene, LoadSceneMode mode)
+    {
+        switch (loaded)
         {
-            logger = base.Logger;
+            case false when scene.name == "Game-Main":
+                GameManager.InitializeNetworkManager();
+                commandManager = new CommandManager(GameManager, logger,
+                    NetworkManager.Singleton.GetComponent<CoroutineRunner>());
 
-            MultiplayerManager = new MultiplayerManager(logger);
-
-            SceneManager.sceneLoaded += OnSceneLoad;
-
-            Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+                NetworkManager.Singleton.LogLevel = Unity.Netcode.LogLevel.Developer;
+                AddCommands();
+                loaded = true;
+                break;
+                
+            case true when scene.name == "Game-Main":
+                AddCommands();
+                break;
         }
+    }
 
-        private void OnSceneLoad(Scene scene, LoadSceneMode mode)
-        {
-            if (loaded || scene.name != "Game-Main")
-                return;
-
-            MultiplayerManager.SpawnNetworkManager();
-            commandManager = new CommandManager(MultiplayerManager, logger, NetworkManager.Singleton.GetComponent<CoroutineRunner>());
-            
-            NetworkManager.Singleton.LogLevel = Unity.Netcode.LogLevel.Developer;
-            
-            CommandConsole.AddCommand("host", commandManager.HandleHostCommand, false);
-            CommandConsole.AddCommand("join", commandManager.HandleJoinCommand, false);
-            CommandConsole.AddCommand("disconnect", commandManager.HandleDisconnectCommand, false);
-
-            loaded = true;
-        }
+    private void AddCommands()
+    {
+        CommandConsole.AddCommand("host", commandManager.HandleHostCommand, false);
+        CommandConsole.AddCommand("join", commandManager.HandleJoinCommand, false);
+        CommandConsole.AddCommand("disconnect", commandManager.HandleDisconnectCommand, false);
     }
 }
