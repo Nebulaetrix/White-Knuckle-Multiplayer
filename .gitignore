@@ -1,0 +1,11 @@
+/deps
+!/deps/FacepunchTransport.cs
+
+/bin
+/obj
+
+/.idea
+/White Knuckle Multiplayer.sln
+/.vs
+/WKMP.sln.DotSettings.user
+/Folder.DotSettings.user

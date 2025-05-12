@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿﻿using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using White_Knuckle_Multiplayer.deps;
@@ -31,7 +31,7 @@ public class TransportListener : MonoBehaviour
 
     private void HandleTransportEvent(NetworkEvent eventType, ulong clientId, System.ArraySegment<byte> payload, float receiveTime)
     {
-        if (WkMultiplayer.MultiplayerManager == null)
+        if (WkMultiplayer.GameManager == null)
         {
             Debug.LogError("[TransportListener] MultiplayerManager is NULL!");
             return;
@@ -40,13 +40,13 @@ public class TransportListener : MonoBehaviour
         if (eventType == NetworkEvent.Connect)
         {   
             ConnectedClientIds.Add(clientId);
-            WkMultiplayer.MultiplayerManager.OnClientConnect(clientId);
+            WkMultiplayer.GameManager.OnClientConnect(clientId);
             
         }
         else if (eventType == NetworkEvent.Disconnect)
         {
             ConnectedClientIds.Remove(clientId);
-            WkMultiplayer.MultiplayerManager.OnClientDisconnect(clientId);
+            WkMultiplayer.GameManager.OnClientDisconnect(clientId);
             
         }
     }
@@ -57,14 +57,6 @@ public class TransportListener : MonoBehaviour
         if (ConnectedClientIds.Count > 0)
             return true;
         
-        // Maybe check more strictly in the future?
-        /*foreach (var id in connectedClients)
-        {
-            Debug.Log($"ID: {id}, Client ID: {clientId}");
-            if (id == clientId)
-                return true;
-                
-        }*/
         return false;
     }
 }
