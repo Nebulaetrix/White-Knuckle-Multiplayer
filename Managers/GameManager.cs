@@ -1,47 +1,89 @@
 ﻿using System;
 using BepInEx.Logging;
-using Steamworks;
-using Unity.Netcode;
-using Unity.Netcode.Components;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
-using White_Knuckle_Multiplayer.deps;
-using White_Knuckle_Multiplayer.Listeners;
 using White_Knuckle_Multiplayer.Networking;
 using Object = UnityEngine.Object;
 
 namespace White_Knuckle_Multiplayer.Managers;
 
-public class GameManager(ManualLogSource logger)
+public class GameManager
 {
-    private NetworkManager networkManagerInstance;
-    internal FacepunchTransport Transport;
-    internal TransportListener Listener;
-
-    private const string NetworkManagerObjectName = "NetworkManager";
+    private readonly ManualLogSource logger;
+    
+    // Direct Mirage networking
+    internal MirageNetworking mirageNetworking;
+    
+    private const string MirageNetworkingObjectName = "MirageNetworking";
     private const string PlayerObjectName = "CL_Player";
     private const string PlayerPrefabName = "CL_Player_Network_Prefab";
 
-    public FacepunchTransport GetTransport() => Transport;
-
-    public void InitializeNetworkManager()
+    public GameManager(ManualLogSource logger)
     {
-        if (NetworkManager.Singleton != null) return;
-
-        var networkManagerGameObject = new GameObject(NetworkManagerObjectName);
-        Object.DontDestroyOnLoad(networkManagerGameObject);
-
-        networkManagerInstance = networkManagerGameObject.AddComponent<NetworkManager>();
-        Transport = networkManagerGameObject.AddComponent<FacepunchTransport>();
-        Listener = networkManagerGameObject.AddComponent<TransportListener>();
-        networkManagerGameObject.AddComponent<CoroutineRunner>();
-
-        NetworkManager.Singleton.NetworkConfig = new NetworkConfig
+        this.logger = logger;
+    }
+    
+    public MirageNetworking GetMirageNetworking() => mirageNetworking;
+    
+    public void InitializeMirageNetworking()
+    {
+        if (mirageNetworking != null) return;
+        
+        var mirageNetworkingObject = new GameObject(MirageNetworkingObjectName);
+        Object.DontDestroyOnLoad(mirageNetworkingObject);
+        
+        mirageNetworking = mirageNetworkingObject.AddComponent<MirageNetworking>();
+        
+        // Set up event handlers for logging
+        SetupMirageEventHandlers();
+        
+        logger.LogInfo("Initialized Mirage Networking");
+    }
+    
+    private void SetupMirageEventHandlers()
+    {
+        if (mirageNetworking == null) return;
+        
+        // Clear any existing handlers
+        mirageNetworking.OnClientConnected -= OnMirageClientConnected;
+        mirageNetworking.OnClientDisconnected -= OnMirageClientDisconnected;
+        mirageNetworking.OnServerStarted -= OnMirageServerStarted;
+        mirageNetworking.OnServerStopped -= OnMirageServerStopped;
+        
+        // Add event handlers
+        mirageNetworking.OnClientConnected += OnMirageClientConnected;
+        mirageNetworking.OnClientDisconnected += OnMirageClientDisconnected;
+        mirageNetworking.OnServerStarted += OnMirageServerStarted;
+        mirageNetworking.OnServerStopped += OnMirageServerStopped;
+    }
+    
+    private void OnMirageClientConnected(string message)
+    {
+        logger.LogInfo($"Mirage connection event: {message}");
+    }
+    
+    private void OnMirageClientDisconnected(string message)
+    {
+        logger.LogInfo($"Mirage disconnection event: {message}");
+    }
+    
+    private void OnMirageServerStarted(string message)
+    {
+        logger.LogInfo($"Mirage server event: {message}");
+    }
+    
+    private void OnMirageServerStopped(string message)
+    {
+        logger.LogInfo($"Mirage server event: {message}");
+    }
+    
+    public void SetMirageClientAddress(string clientAddress)
+    {
+        if (mirageNetworking != null)
         {
-            NetworkTransport = Transport
-        };
-
-        logger.LogInfo("Initialized NetworkManager");
+            mirageNetworking.ClientConnectAddress = clientAddress;
+            logger.LogInfo($"Set Mirage client address to {clientAddress}");
+        }
     }
 
     private void CreatePlayerPrefab()
@@ -57,7 +99,13 @@ public class GameManager(ManualLogSource logger)
         GameObject playerPrefab = InstantiatePlayerPrefab(player);
         DestroyUnwantedComponents(playerPrefab);
 
-        NetworkManager.Singleton.NetworkConfig.PlayerPrefab = playerPrefab;
+        if (mirageNetworking != null)
+        {
+            // Use the SetPlayerPrefab method to ensure NetworkIdentity is added
+            mirageNetworking.SetPlayerPrefab(playerPrefab);
+            logger.LogInfo("Set player prefab for Mirage networking");
+        }
+        
         logger.LogDebug("Player Prefab created");
     }
 
@@ -68,11 +116,6 @@ public class GameManager(ManualLogSource logger)
 
         prefab.name = PlayerPrefabName;
         prefab.SetActive(false);
-
-        if (prefab.GetComponent<NetworkObject>() == null)
-            prefab.AddComponent<NetworkObject>();
-        if (prefab.GetComponent<NetworkTransform>() == null)
-            prefab.AddComponent<ClientNetworkTransform>();
 
         return prefab;
     }
@@ -119,72 +162,126 @@ public class GameManager(ManualLogSource logger)
 
     public void StartHost()
     {
-        if (NetworkManager.Singleton == null) return;
+        // Create player prefab
         CreatePlayerPrefab();
-        logger.LogDebug("Starting Host...");
-
+        
+        // Initialize Mirage networking if needed
+        InitializeMirageNetworking();
+        
         try
         {
-            NetworkManager.Singleton.StartHost();
-            CommandConsole.Log("Host started!");
-            logger.LogInfo("Host started!");
+            logger.LogInfo("Starting local Mirage server...");
+            mirageNetworking.StartServer();
+            
+            // Connect local client to server
+            mirageNetworking.ConnectClient();
+            
+            logger.LogInfo("Mirage server started!");
+            
+            // Log local IPs for others to connect
+            LogLocalIps();
         }
         catch (Exception ex)
         {
-            CommandConsole.LogError($"Unable to initialize host! Ex:{ex}");
-            logger.LogError($"Unable to initialize host! Ex:{ex}");
+            logger.LogError($"Failed to start Mirage host: {ex.Message}");
         }
     }
-
-    public void StartClient()
+    
+    public void StartServer()
     {
-        if (NetworkManager.Singleton == null) return;
+        // Create player prefab
         CreatePlayerPrefab();
-        logger.LogDebug("Starting Client...");
-
+        
+        // Initialize Mirage networking if needed
+        InitializeMirageNetworking();
+        
         try
         {
-            NetworkManager.Singleton.StartClient();
-            CommandConsole.Log("Client started!");
-            logger.LogInfo("Client started!");
+            logger.LogInfo("Starting Mirage server...");
+            mirageNetworking.StartServer();
+            logger.LogInfo("Mirage server started!");
+            
+            // Log local IPs for others to connect
+            LogLocalIps();
         }
         catch (Exception ex)
         {
-            logger.LogError($"Unable to initialize client! Ex:{ex}");
+            logger.LogError($"Failed to start Mirage server: {ex.Message}");
         }
     }
-
-    public void OnClientConnect(ulong clientId)
+    
+    public void StartClient(string serverAddress)
     {
-        if ((ulong)SteamClient.SteamId == clientId)
+        // Create player prefab
+        CreatePlayerPrefab();
+        
+        // Initialize Mirage networking if needed
+        InitializeMirageNetworking();
+        
+        try
         {
-            logger.LogError("Cannot instantiate self!");
-            return;
+            logger.LogInfo($"Joining local Mirage server at {serverAddress}...");
+            
+            // Set client address
+            SetMirageClientAddress(serverAddress);
+            
+            // Connect to server
+            mirageNetworking.ConnectClient();
+            
+            logger.LogInfo("Mirage client connecting...");
         }
-
-        if (NetworkManager.Singleton.NetworkConfig.PlayerPrefab == null)
+        catch (Exception ex)
         {
-            logger.LogError("Player prefab not registered!");
-            return;
+            logger.LogError($"Failed to connect Mirage client: {ex.Message}");
         }
-
-        GameObject player = Object.Instantiate(NetworkManager.Singleton.NetworkConfig.PlayerPrefab);
-        player.SetActive(true);
-
-        var networkObject = player.GetComponent<NetworkObject>();
-        if (networkObject == null)
-        {
-            logger.LogError("Instantiated player missing NetworkObject component!");
-            return;
-        }
-
-        networkObject.name = $"{PlayerPrefabName}({clientId})";
-        networkObject.SpawnAsPlayerObject(clientId);
-        logger.LogInfo("Client connected to lobby!");
     }
-
-    public void OnClientDisconnect(ulong clientId)
+    
+    public void DisconnectClient()
     {
-        Object.Destroy(GameObject.Find($"{PlayerPrefabName}({clientId})"));
+        if (mirageNetworking != null)
+        {
+            try
+            {
+                logger.LogInfo("Disconnecting from Mirage server...");
+                mirageNetworking.Disconnect();
+                logger.LogInfo("Disconnected from Mirage server");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Failed to disconnect Mirage client: {ex.Message}");
+            }
+        }
     }
+    
+    private void LogLocalIps()
+    {
+        try
+        {
+            var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    logger.LogInfo($"Your local IP is {ip}. Others can join with 'localjoin {ip}'");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError($"Failed to get local IP addresses: {ex.Message}");
+        }
+    }
+    
+    public void LogConnectedPlayers()
+    {
+        if (mirageNetworking != null)
+        {
+            mirageNetworking.LogConnectedClients();
+        }
+        else
+        {
+            logger.LogWarning("Mirage networking is not initialized");
+        }
+    }
+    
 }

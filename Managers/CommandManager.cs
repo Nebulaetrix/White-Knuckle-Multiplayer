@@ -1,129 +1,146 @@
 ﻿using System;
 using System.Collections;
 using BepInEx.Logging;
-using Steamworks;
-using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using White_Knuckle_Multiplayer.Networking;
 
 namespace White_Knuckle_Multiplayer.Managers;
-public class CommandManager
+
+internal class CommandManager
 {
     private readonly GameManager gameManager;
     private readonly ManualLogSource logger;
     private readonly MonoBehaviour coroutineHost;
+    private readonly CoroutineRunner coroutineRunner;
 
-    private const string ErrorCoroutineHostNull = "Coroutine host is null! Cannot start host command.";
-    private const string ErrorSteamNotInitialized = "Steam not initialized.";
-    private const string ErrorInvalidSteamId = "Please provide a valid Steam ID.";
-    private const string ErrorTransportUnavailable = "Transport unavailable.";
-    private const string MessageShutdown = "Shutting down host and disconnecting all clients...";
+    private const string MessageShutdown = "Shutting down host and clients...";
     private const string SceneMainMenu = "Main-Menu";
 
-    public CommandManager(GameManager gameManager, ManualLogSource logger, MonoBehaviour coroutineHost)
+    // Events
+    private MirageNetworking mirageNetworking => gameManager.GetMirageNetworking();
+
+    public CommandManager(GameManager gameManager, ManualLogSource logger, MonoBehaviour coroutineHost, CoroutineRunner coroutineRunner)
     {
         this.gameManager = gameManager;
         this.logger = logger;
         this.coroutineHost = coroutineHost;
+        this.coroutineRunner = coroutineRunner;
     }
 
-    public void HandleHostCommand(string[] args)
+    public void HandleLocalHostCommand(string[] args)
     {
-        if (!ValidateCoroutineHost()) return;
-
-        coroutineHost.StartCoroutine(CreateLobbyAndHostGame());
+        logger.LogInfo("Starting local Mirage server...");
+        
+        try
+        {
+            // Start server and connect local client
+            gameManager.StartHost();
+            
+            CommandConsole.Log("Mirage server started!");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError($"Error starting Mirage server: {ex.Message}");
+            CommandConsole.LogError($"Error starting Mirage server: {ex.Message}");
+        }
     }
-
-    public void HandleJoinCommand(string[] args)
+    
+    public void HandleLocalJoinCommand(string[] args)
     {
-        if (!ValidateArgsAndParseSteamId(args, out ulong steamId)) return;
-
-        JoinLobbyAndStartClient(steamId);
+        string serverAddress = "localhost";
+        if (args.Length >= 1 && !string.IsNullOrEmpty(args[0]))
+        {
+            serverAddress = args[0];
+        }
+        
+        logger.LogInfo($"Joining local Mirage server at {serverAddress}...");
+        
+        try
+        {
+            // Start the client
+            gameManager.StartClient(serverAddress);
+            
+            CommandConsole.Log($"Connecting to local Mirage server at {serverAddress}...");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError($"Error connecting to Mirage server: {ex.Message}");
+            CommandConsole.LogError($"Error connecting to Mirage server: {ex.Message}");
+        }
     }
 
     public void HandleDisconnectCommand(string[] args)
     {
-        ShutdownHostAndDisconnectClients();
-    }
-
-    private IEnumerator CreateLobbyAndHostGame()
-    {
-        if (!IsSteamClientValid()) yield break;
-
-        gameManager.StartHost();
-    }
-
-    private void JoinLobbyAndStartClient(ulong steamId)
-    {
-        if (!IsSteamClientValid()) return;
-
-        var transport = gameManager.GetTransport();
-        if (transport == null)
-        {
-            LogError(ErrorTransportUnavailable);
-            return;
-        }
-
-        transport.targetSteamId = steamId;
-
+        logger.LogInfo("HandleDisconnectCommand called");
         try
         {
-            gameManager.StartClient();
+            CommandConsole.Log("Disconnecting from Mirage server/stopping Mirage server...");
+            gameManager.DisconnectClient();
+            CommandConsole.Log("Disconnected from Mirage network");
         }
         catch (Exception ex)
         {
-            LogError($"Client start error: {ex.Message}");
+            logger.LogError($"Error disconnecting: {ex.Message}");
+            CommandConsole.LogError($"Error disconnecting: {ex.Message}");
         }
     }
-
-    private void ShutdownHostAndDisconnectClients()
+    
+    private void RegisterMirageEventHandlers()
     {
-        logger.LogInfo(MessageShutdown);
-        NetworkManager.Singleton.NetworkConfig.NetworkTransport.Shutdown();
-        SceneManager.LoadScene(SceneMainMenu);
-        logger.LogInfo("Host and client connections shut down.");
-    }
-
-    private bool ValidateCoroutineHost()
-    {
-        if (coroutineHost == null)
+        if (mirageNetworking == null)
         {
-            LogError(ErrorCoroutineHostNull);
-            return false;
+            logger.LogWarning("Cannot register Mirage events - MirageNetworking not initialized");
+            return;
         }
-        return true;
+        
+        // Clear previous handlers to avoid duplicates
+        mirageNetworking.OnClientConnected -= OnMirageClientConnected;
+        mirageNetworking.OnClientDisconnected -= OnMirageClientDisconnected;
+        mirageNetworking.OnServerStarted -= OnMirageServerStarted;
+        mirageNetworking.OnServerStopped -= OnMirageServerStopped;
+        
+        // Register new handlers
+        mirageNetworking.OnClientConnected += OnMirageClientConnected;
+        mirageNetworking.OnClientDisconnected += OnMirageClientDisconnected;
+        mirageNetworking.OnServerStarted += OnMirageServerStarted;
+        mirageNetworking.OnServerStopped += OnMirageServerStopped;
     }
-
-    private bool ValidateArgsAndParseSteamId(string[] args, out ulong steamId)
+    
+    private void OnMirageClientConnected(string message)
     {
-        if (args.Length != 1 || !ulong.TryParse(args[0], out steamId))
+        CommandConsole.Log(message);
+        logger.LogInfo($"Mirage client connected: {message}");
+    }
+    
+    private void OnMirageClientDisconnected(string message)
+    {
+        CommandConsole.Log(message);
+        logger.LogInfo($"Mirage client disconnected: {message}");
+    }
+    
+    private void OnMirageServerStarted(string message)
+    {
+        CommandConsole.Log(message);
+        logger.LogInfo($"Mirage server started: {message}");
+    }
+    
+    private void OnMirageServerStopped(string message)
+    {
+        CommandConsole.Log(message);
+        logger.LogInfo($"Mirage server stopped: {message}");
+    }
+    
+    // Methods to display players and simulate spawning
+    public void HandlePlayersCommand(string[] args)
+    {
+        if (mirageNetworking == null)
         {
-            LogWarning(ErrorInvalidSteamId);
-            steamId = 0;
-            return false;
+            CommandConsole.LogError("Mirage networking not initialized");
+            return;
         }
-        return true;
+        
+        mirageNetworking.LogConnectedClients();
     }
-
-    private bool IsSteamClientValid()
-    {
-        if (!SteamClient.IsValid || !SteamClient.IsLoggedOn)
-        {
-            LogError(ErrorSteamNotInitialized);
-            return false;
-        }
-        return true;
-    }
-
-    private void LogError(string message)
-    {
-        CommandConsole.LogError(message);
-        logger.LogError(message);
-    }
-
-    private void LogWarning(string message)
-    {
-        CommandConsole.LogError(message);
-        logger.LogWarning(message);
-    }
+    
 }

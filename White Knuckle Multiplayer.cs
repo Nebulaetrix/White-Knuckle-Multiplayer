@@ -1,7 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
 using UnityEngine.SceneManagement;
-using Unity.Netcode;
 using White_Knuckle_Multiplayer.Managers;
 using White_Knuckle_Multiplayer.Networking;
 
@@ -15,6 +14,7 @@ public class WkMultiplayer : BaseUnityPlugin
 
     public static GameManager GameManager;
     private CommandManager commandManager;
+    private CoroutineRunner coroutineRunner;
 
     private void Awake()
     {
@@ -32,11 +32,21 @@ public class WkMultiplayer : BaseUnityPlugin
         switch (loaded)
         {
             case false when scene.name == "Game-Main":
-                GameManager.InitializeNetworkManager();
-                commandManager = new CommandManager(GameManager, logger,
-                    NetworkManager.Singleton.GetComponent<CoroutineRunner>());
-
-                NetworkManager.Singleton.LogLevel = Unity.Netcode.LogLevel.Developer;
+                // Initialize only Mirage networking
+                GameManager.InitializeMirageNetworking();
+                
+                // Setup the coroutine runner
+                if (coroutineRunner == null)
+                {
+                    var coroutineObject = new UnityEngine.GameObject("CoroutineRunner");
+                    UnityEngine.Object.DontDestroyOnLoad(coroutineObject);
+                    coroutineRunner = coroutineObject.AddComponent<CoroutineRunner>();
+                    logger.LogInfo("Created CoroutineRunner");
+                }
+                
+                // Initialize command manager with all required parameters
+                commandManager = new CommandManager(GameManager, logger, coroutineRunner, coroutineRunner);
+                
                 AddCommands();
                 loaded = true;
                 break;
@@ -49,8 +59,22 @@ public class WkMultiplayer : BaseUnityPlugin
 
     private void AddCommands()
     {
-        CommandConsole.AddCommand("host", commandManager.HandleHostCommand, false);
-        CommandConsole.AddCommand("join", commandManager.HandleJoinCommand, false);
+        if (commandManager == null)
+        {
+            logger.LogError("Cannot add commands - CommandManager is null");
+            return;
+        }
+        
+        // Direct Mirage networking commands
+        CommandConsole.AddCommand("host", commandManager.HandleLocalHostCommand, false);
+        CommandConsole.AddCommand("join", commandManager.HandleLocalJoinCommand, false);
         CommandConsole.AddCommand("disconnect", commandManager.HandleDisconnectCommand, false);
+        CommandConsole.AddCommand("localhost", commandManager.HandleLocalHostCommand, false);
+        CommandConsole.AddCommand("localjoin", commandManager.HandleLocalJoinCommand, false);
+        
+        // Debugging commands for Mirage
+        CommandConsole.AddCommand("players", commandManager.HandlePlayersCommand, false);
+        
+        logger.LogInfo("Commands registered successfully");
     }
 }
