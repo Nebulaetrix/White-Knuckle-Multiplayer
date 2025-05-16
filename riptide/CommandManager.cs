@@ -140,31 +140,5 @@ namespace White_Knuckle_Multiplayer.Networking
     }
     
     
-    public static class CommandConsole
-    {
-        public static void Log(string message)
-        {
-            
-            Debug.Log($"[Console] {message}");
-        }
-        
-        public static void LogError(string message)
-        {
-           
-            Debug.LogError($"[Console] {message}");
-        }
-        
-        public static void LogWarning(string message)
-        {
-            
-            Debug.LogWarning($"[Console] {message}");
-        }
-        
-        // Method to add a command to the console system
-        public static void AddCommand(string commandName, Func<string[], bool> callback, bool requiresNetwork = true)
-        {
-            // This would register the command with your command system
-            Debug.Log($"Registered command: {commandName}");
-        }
+   
     }
-} 
