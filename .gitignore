@@ -1,5 +1,9 @@
-/deps
-!/deps/FacepunchTransport.cs
+
+deps/Unity.Collections.dll
+deps/Unity.Mathematics.dll
+deps/Unity.Postprocessing.Runtime.dll
+deps/UnityEditor.CoreModule.dll
+deps/Assembly-CSharp.dll
 
 /bin
 /obj
