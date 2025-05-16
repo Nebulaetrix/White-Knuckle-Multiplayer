@@ -13,7 +13,7 @@ public class WkMultiplayer : BaseUnityPlugin
     private bool loaded = false;
 
     public static GameManager GameManager;
-    private CommandManager commandManager;
+    private Managers.CommandManager commandManager;
     private CoroutineRunner coroutineRunner;
 
     private void Awake()
@@ -32,8 +32,8 @@ public class WkMultiplayer : BaseUnityPlugin
         switch (loaded)
         {
             case false when scene.name == "Game-Main":
-                // Initialize only Mirage networking
-                GameManager.InitializeMirageNetworking();
+                // Initialize Riptide networking
+                GameManager.InitializeRiptideNetworking();
                 
                 // Setup the coroutine runner
                 if (coroutineRunner == null)
@@ -45,7 +45,7 @@ public class WkMultiplayer : BaseUnityPlugin
                 }
                 
                 // Initialize command manager with all required parameters
-                commandManager = new CommandManager(GameManager, logger, coroutineRunner, coroutineRunner);
+                commandManager = new Managers.CommandManager(GameManager, logger, coroutineRunner, coroutineRunner);
                 
                 AddCommands();
                 loaded = true;
@@ -65,14 +65,14 @@ public class WkMultiplayer : BaseUnityPlugin
             return;
         }
         
-        // Direct Mirage networking commands
+        // Riptide networking commands
         CommandConsole.AddCommand("host", commandManager.HandleLocalHostCommand, false);
         CommandConsole.AddCommand("join", commandManager.HandleLocalJoinCommand, false);
         CommandConsole.AddCommand("disconnect", commandManager.HandleDisconnectCommand, false);
         CommandConsole.AddCommand("localhost", commandManager.HandleLocalHostCommand, false);
         CommandConsole.AddCommand("localjoin", commandManager.HandleLocalJoinCommand, false);
         
-        // Debugging commands for Mirage
+        // Debugging commands
         CommandConsole.AddCommand("players", commandManager.HandlePlayersCommand, false);
         
         logger.LogInfo("Commands registered successfully");

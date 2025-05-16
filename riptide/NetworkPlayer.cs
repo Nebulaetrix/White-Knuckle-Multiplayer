@@ -76,7 +76,7 @@ namespace White_Knuckle_Multiplayer.Networking
             // Determine if this is the local player
             isLocalPlayer = IsLocalPlayer();
             
-            // Log detection details - important for debugging host vs client
+            // Log detection details 
             if (networking.IsServer)
             {
                 Debug.Log($"Player {Id} on HOST side - isLocalPlayer: {isLocalPlayer}, ClientId: {networking.GetClientId()}");

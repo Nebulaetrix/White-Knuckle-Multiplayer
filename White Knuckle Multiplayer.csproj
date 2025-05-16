@@ -18,17 +18,6 @@
 	  <None Remove="FakeUnityEngine.dll" />
 	  <None Remove="FakeUnityEngine.pdb" />
 	  <None Remove="LICENSE" />
-	  <None Remove="Mirage.CodeGen.deps.json" />
-	  <None Remove="Mirage.CodeGen.dll" />
-	  <None Remove="Mirage.CodeGen.exe" />
-	  <None Remove="Mirage.CodeGen.pdb" />
-	  <None Remove="Mirage.CodeGen.runtimeconfig.json" />
-	  <None Remove="Mirage.dll" />
-	  <None Remove="Mirage.Logging.dll" />
-	  <None Remove="Mirage.Logging.pdb" />
-	  <None Remove="Mirage.pdb" />
-	  <None Remove="Mirage.SocketLayer.dll" />
-	  <None Remove="Mirage.SocketLayer.pdb" />
 	  <None Remove="Mono.Cecil.dll" />
 	  <None Remove="Mono.Cecil.Mdb.dll" />
 	  <None Remove="Mono.Cecil.Pdb.dll" />
@@ -48,29 +37,8 @@
 		<Reference Include="Assembly-CSharp">
 			<HintPath>deps\Assembly-CSharp.dll</HintPath>
 		</Reference>
-		<Reference Include="Mirage">
-			<HintPath>deps\Mirage.dll</HintPath>
-		</Reference>
-		<Reference Include="Mirage.Authenticators">
-		  <HintPath>deps\Mirage.Authenticators.dll</HintPath>
-		</Reference>
-		<Reference Include="Mirage.Components">
-		  <HintPath>deps\Mirage.Components.dll</HintPath>
-		</Reference>
-		<Reference Include="Mirage.Logging">
-		  <HintPath>deps\Mirage.Logging.dll</HintPath>
-		</Reference>
-		<Reference Include="Mirage.SocketLayer">
-			<HintPath>deps\Mirage.SocketLayer.dll</HintPath>
-		</Reference>
-		<Reference Include="Mirage.Sockets.FacepunchSteam">
-		  <HintPath>deps\Mirage.Sockets.FacepunchSteam.dll</HintPath>
-		</Reference>
-		<Reference Include="Mirage.Sockets.Udp">
-		  <HintPath>deps\Mirage.Sockets.Udp.dll</HintPath>
-		</Reference>
-		<Reference Include="UniTask">
-			<HintPath>deps\UniTask.dll</HintPath>
+		<Reference Include="RiptideNetworking">
+		  <HintPath>deps\RiptideNetworking.dll</HintPath>
 		</Reference>
 		<Reference Include="Unity.Collections">
 			<HintPath>deps\Unity.Collections.dll</HintPath>
@@ -95,8 +63,4 @@
 	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
 		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
 	</ItemGroup>
-	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-		<Exec Command="&quot;$(MSBuildProjectDirectory)\Mirage.CodeGen.exe&quot; &quot;$(TargetPath)&quot;" />
-		<Error Condition="'$(ExitCode)' == '1'" Text="Mirage.CodeGen.exe failed with exit code 1." />
-	</Target>
 </Project>

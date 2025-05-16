@@ -11,10 +11,9 @@ public class GameManager
 {
     private readonly ManualLogSource logger;
     
-    // Direct Mirage networking
-    internal MirageNetworking mirageNetworking;
-    
-    private const string MirageNetworkingObjectName = "MirageNetworking";
+    // Riptide networking
+    internal RiptideNetworking riptideNetworking;
+    private const string RiptideNetworkingObjectName = "RiptideNetworking";
     private const string PlayerObjectName = "CL_Player";
     private const string PlayerPrefabName = "CL_Player_Network_Prefab";
 
@@ -23,66 +22,66 @@ public class GameManager
         this.logger = logger;
     }
     
-    public MirageNetworking GetMirageNetworking() => mirageNetworking;
+    public RiptideNetworking GetRiptideNetworking() => riptideNetworking;
     
-    public void InitializeMirageNetworking()
+    public void InitializeRiptideNetworking()
     {
-        if (mirageNetworking != null) return;
+        if (riptideNetworking != null) return;
         
-        var mirageNetworkingObject = new GameObject(MirageNetworkingObjectName);
-        Object.DontDestroyOnLoad(mirageNetworkingObject);
+        var riptideNetworkingObject = new GameObject(RiptideNetworkingObjectName);
+        Object.DontDestroyOnLoad(riptideNetworkingObject);
         
-        mirageNetworking = mirageNetworkingObject.AddComponent<MirageNetworking>();
+        riptideNetworking = riptideNetworkingObject.AddComponent<RiptideNetworking>();
         
         // Set up event handlers for logging
-        SetupMirageEventHandlers();
+        SetupRiptideEventHandlers();
         
-        logger.LogInfo("Initialized Mirage Networking");
+        logger.LogInfo("Initialized Riptide Networking");
     }
     
-    private void SetupMirageEventHandlers()
+    private void SetupRiptideEventHandlers()
     {
-        if (mirageNetworking == null) return;
+        if (riptideNetworking == null) return;
         
         // Clear any existing handlers
-        mirageNetworking.OnClientConnected -= OnMirageClientConnected;
-        mirageNetworking.OnClientDisconnected -= OnMirageClientDisconnected;
-        mirageNetworking.OnServerStarted -= OnMirageServerStarted;
-        mirageNetworking.OnServerStopped -= OnMirageServerStopped;
+        riptideNetworking.OnClientConnected -= OnRiptideClientConnected;
+        riptideNetworking.OnClientDisconnected -= OnRiptideClientDisconnected;
+        riptideNetworking.OnServerStarted -= OnRiptideServerStarted;
+        riptideNetworking.OnServerStopped -= OnRiptideServerStopped;
         
         // Add event handlers
-        mirageNetworking.OnClientConnected += OnMirageClientConnected;
-        mirageNetworking.OnClientDisconnected += OnMirageClientDisconnected;
-        mirageNetworking.OnServerStarted += OnMirageServerStarted;
-        mirageNetworking.OnServerStopped += OnMirageServerStopped;
+        riptideNetworking.OnClientConnected += OnRiptideClientConnected;
+        riptideNetworking.OnClientDisconnected += OnRiptideClientDisconnected;
+        riptideNetworking.OnServerStarted += OnRiptideServerStarted;
+        riptideNetworking.OnServerStopped += OnRiptideServerStopped;
     }
     
-    private void OnMirageClientConnected(string message)
+    private void OnRiptideClientConnected(string message)
     {
-        logger.LogInfo($"Mirage connection event: {message}");
+        logger.LogInfo($"Riptide connection event: {message}");
     }
     
-    private void OnMirageClientDisconnected(string message)
+    private void OnRiptideClientDisconnected(string message)
     {
-        logger.LogInfo($"Mirage disconnection event: {message}");
+        logger.LogInfo($"Riptide disconnection event: {message}");
     }
     
-    private void OnMirageServerStarted(string message)
+    private void OnRiptideServerStarted(string message)
     {
-        logger.LogInfo($"Mirage server event: {message}");
+        logger.LogInfo($"Riptide server event: {message}");
     }
     
-    private void OnMirageServerStopped(string message)
+    private void OnRiptideServerStopped(string message)
     {
-        logger.LogInfo($"Mirage server event: {message}");
+        logger.LogInfo($"Riptide server event: {message}");
     }
     
-    public void SetMirageClientAddress(string clientAddress)
+    public void SetRiptideClientAddress(string clientAddress)
     {
-        if (mirageNetworking != null)
+        if (riptideNetworking != null)
         {
-            mirageNetworking.ClientConnectAddress = clientAddress;
-            logger.LogInfo($"Set Mirage client address to {clientAddress}");
+            riptideNetworking.ClientConnectAddress = clientAddress;
+            logger.LogInfo($"Set Riptide client address to {clientAddress}");
         }
     }
 
@@ -99,11 +98,11 @@ public class GameManager
         GameObject playerPrefab = InstantiatePlayerPrefab(player);
         DestroyUnwantedComponents(playerPrefab);
 
-        if (mirageNetworking != null)
+        if (riptideNetworking != null)
         {
-            // Use the SetPlayerPrefab method to ensure NetworkIdentity is added
-            mirageNetworking.SetPlayerPrefab(playerPrefab);
-            logger.LogInfo("Set player prefab for Mirage networking");
+            // Set the player prefab
+            riptideNetworking.SetPlayerPrefab(playerPrefab);
+            logger.LogInfo("Set player prefab for Riptide networking");
         }
         
         logger.LogDebug("Player Prefab created");
@@ -165,25 +164,25 @@ public class GameManager
         // Create player prefab
         CreatePlayerPrefab();
         
-        // Initialize Mirage networking if needed
-        InitializeMirageNetworking();
+        // Initialize Riptide networking if needed
+        InitializeRiptideNetworking();
         
         try
         {
-            logger.LogInfo("Starting local Mirage server...");
-            mirageNetworking.StartServer();
+            logger.LogInfo("Starting local Riptide server...");
+            riptideNetworking.StartServer();
             
             // Connect local client to server
-            mirageNetworking.ConnectClient();
+            riptideNetworking.ConnectClient();
             
-            logger.LogInfo("Mirage server started!");
+            logger.LogInfo("Riptide server started!");
             
             // Log local IPs for others to connect
             LogLocalIps();
         }
         catch (Exception ex)
         {
-            logger.LogError($"Failed to start Mirage host: {ex.Message}");
+            logger.LogError($"Failed to start Riptide host: {ex.Message}");
         }
     }
     
@@ -192,21 +191,21 @@ public class GameManager
         // Create player prefab
         CreatePlayerPrefab();
         
-        // Initialize Mirage networking if needed
-        InitializeMirageNetworking();
+        // Initialize Riptide networking if needed
+        InitializeRiptideNetworking();
         
         try
         {
-            logger.LogInfo("Starting Mirage server...");
-            mirageNetworking.StartServer();
-            logger.LogInfo("Mirage server started!");
+            logger.LogInfo("Starting Riptide server...");
+            riptideNetworking.StartServer();
+            logger.LogInfo("Riptide server started!");
             
             // Log local IPs for others to connect
             LogLocalIps();
         }
         catch (Exception ex)
         {
-            logger.LogError($"Failed to start Mirage server: {ex.Message}");
+            logger.LogError($"Failed to start Riptide server: {ex.Message}");
         }
     }
     
@@ -215,40 +214,40 @@ public class GameManager
         // Create player prefab
         CreatePlayerPrefab();
         
-        // Initialize Mirage networking if needed
-        InitializeMirageNetworking();
+        // Initialize Riptide networking if needed
+        InitializeRiptideNetworking();
         
         try
         {
-            logger.LogInfo($"Joining local Mirage server at {serverAddress}...");
+            logger.LogInfo($"Joining Riptide server at {serverAddress}...");
             
             // Set client address
-            SetMirageClientAddress(serverAddress);
+            SetRiptideClientAddress(serverAddress);
             
             // Connect to server
-            mirageNetworking.ConnectClient();
+            riptideNetworking.ConnectClient();
             
-            logger.LogInfo("Mirage client connecting...");
+            logger.LogInfo("Riptide client connecting...");
         }
         catch (Exception ex)
         {
-            logger.LogError($"Failed to connect Mirage client: {ex.Message}");
+            logger.LogError($"Failed to connect Riptide client: {ex.Message}");
         }
     }
     
     public void DisconnectClient()
     {
-        if (mirageNetworking != null)
+        if (riptideNetworking != null)
         {
             try
             {
-                logger.LogInfo("Disconnecting from Mirage server...");
-                mirageNetworking.Disconnect();
-                logger.LogInfo("Disconnected from Mirage server");
+                logger.LogInfo("Disconnecting from Riptide server...");
+                riptideNetworking.Disconnect();
+                logger.LogInfo("Disconnected from Riptide server");
             }
             catch (Exception ex)
             {
-                logger.LogError($"Failed to disconnect Mirage client: {ex.Message}");
+                logger.LogError($"Failed to disconnect Riptide client: {ex.Message}");
             }
         }
     }
@@ -262,7 +261,7 @@ public class GameManager
             {
                 if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                 {
-                    logger.LogInfo($"Your local IP is {ip}. Others can join with 'localjoin {ip}'");
+                    logger.LogInfo($"Your local IP is {ip}. Others can join with 'join {ip}'");
                 }
             }
         }
@@ -274,14 +273,25 @@ public class GameManager
     
     public void LogConnectedPlayers()
     {
-        if (mirageNetworking != null)
+        if (riptideNetworking != null)
         {
-            mirageNetworking.LogConnectedClients();
+            riptideNetworking.LogConnectedClients();
         }
         else
         {
-            logger.LogWarning("Mirage networking is not initialized");
+            logger.LogWarning("Riptide networking is not initialized");
         }
     }
     
+    public void SimulatePlayerJoin(string playerName)
+    {
+        if (riptideNetworking != null)
+        {
+            riptideNetworking.SimulatePlayerJoin(playerName);
+        }
+        else
+        {
+            logger.LogWarning("Riptide networking is not initialized");
+        }
+    }
 }
