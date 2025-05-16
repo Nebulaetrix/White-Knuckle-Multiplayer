@@ -139,24 +139,24 @@ namespace White_Knuckle_Multiplayer.Networking
         public void HandleLocalJoinCommand(string[] args) => HandleJoinCommand(args);
     }
     
-    // Define the CommandConsole class for logging - this would be implemented elsewhere in your game
+    
     public static class CommandConsole
     {
         public static void Log(string message)
         {
-            // In a real implementation, this would display the message in a game console
+            
             Debug.Log($"[Console] {message}");
         }
         
         public static void LogError(string message)
         {
-            // In a real implementation, this would display the error in a game console
+           
             Debug.LogError($"[Console] {message}");
         }
         
         public static void LogWarning(string message)
         {
-            // In a real implementation, this would display the warning in a game console
+            
             Debug.LogWarning($"[Console] {message}");
         }
         
