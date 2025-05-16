@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>RiptideOnly</AssemblyName>
+    <Product>RiptideOnly</Product>
+    <Version>0.0.1</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>White_Knuckle_Multiplayer.Networking</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="UnityEngine.Modules" Version="2022.3.32" IncludeAssets="compile" />
+    <PackageReference Include="BepInEx.Core" Version="5.*" />
+    <PackageReference Include="RiptideNetworking.Riptide" Version="2.0.0" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <!-- Use relative paths for any additional dependencies -->
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\deps\Assembly-CSharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project> 
