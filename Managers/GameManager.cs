@@ -1,190 +1,147 @@
 ﻿using System;
+using System.Net;
 using BepInEx.Logging;
-using Steamworks;
-using Unity.Netcode;
-using Unity.Netcode.Components;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
-using White_Knuckle_Multiplayer.deps;
-using White_Knuckle_Multiplayer.Listeners;
 using White_Knuckle_Multiplayer.Networking;
 using Object = UnityEngine.Object;
 
 namespace White_Knuckle_Multiplayer.Managers;
 
-public class GameManager(ManualLogSource logger)
+public class GameManager
 {
-    private NetworkManager networkManagerInstance;
-    internal FacepunchTransport Transport;
-    internal TransportListener Listener;
-
-    private const string NetworkManagerObjectName = "NetworkManager";
+    
+    private const string WKNetworkingObjectName = "WKNetworking";
     private const string PlayerObjectName = "CL_Player";
     private const string PlayerPrefabName = "CL_Player_Network_Prefab";
 
-    public FacepunchTransport GetTransport() => Transport;
+    public GameObject WKNetworkingObject { get; private set; }
+    public NetworkClient networkClient { get; private set; }
+    public NetworkServer networkServer { get; private set; }
+    public MessageHandler messageHandler { get; private set; }
 
-    public void InitializeNetworkManager()
+    public GameManager()
     {
-        if (NetworkManager.Singleton != null) return;
-
-        var networkManagerGameObject = new GameObject(NetworkManagerObjectName);
-        Object.DontDestroyOnLoad(networkManagerGameObject);
-
-        networkManagerInstance = networkManagerGameObject.AddComponent<NetworkManager>();
-        Transport = networkManagerGameObject.AddComponent<FacepunchTransport>();
-        Listener = networkManagerGameObject.AddComponent<TransportListener>();
-        networkManagerGameObject.AddComponent<CoroutineRunner>();
-
-        NetworkManager.Singleton.NetworkConfig = new NetworkConfig
-        {
-            NetworkTransport = Transport
-        };
-
-        logger.LogInfo("Initialized NetworkManager");
+        
+    }
+    
+    public void InitializeWKNetworking()
+    {
+        if (WKNetworkingObject != null) return;
+        
+        // Persistent GameObject holding all networking stuff
+        WKNetworkingObject = new GameObject(WKNetworkingObjectName);
+        Object.DontDestroyOnLoad(WKNetworkingObject);
+        
+        // Attaching Networked objects to it
+        networkClient = WKNetworkingObject.AddComponent<NetworkClient>();
+        networkServer = WKNetworkingObject.AddComponent<NetworkServer>();
+        messageHandler = WKNetworkingObject.AddComponent<MessageHandler>();
+        
+        
+        LogManager.Info("Initialized WKNetworking");
     }
 
-    private void CreatePlayerPrefab()
-    {
-        logger.LogDebug("Creating Player Prefab...");
-        GameObject player = GameObject.Find(PlayerObjectName);
-        if (player == null)
-        {
-            logger.LogError("Cannot start host, no player found!");
-            return;
-        }
-
-        GameObject playerPrefab = InstantiatePlayerPrefab(player);
-        DestroyUnwantedComponents(playerPrefab);
-
-        NetworkManager.Singleton.NetworkConfig.PlayerPrefab = playerPrefab;
-        logger.LogDebug("Player Prefab created");
-    }
-
-    private GameObject InstantiatePlayerPrefab(GameObject player)
-    {
-        GameObject prefab = Object.Instantiate(player);
-        Object.DontDestroyOnLoad(prefab);
-
-        prefab.name = PlayerPrefabName;
-        prefab.SetActive(false);
-
-        if (prefab.GetComponent<NetworkObject>() == null)
-            prefab.AddComponent<NetworkObject>();
-        if (prefab.GetComponent<NetworkTransform>() == null)
-            prefab.AddComponent<ClientNetworkTransform>();
-
-        return prefab;
-    }
-
-    private void DestroyUnwantedComponents(GameObject prefab)
-    {
-        Object.Destroy(prefab.GetComponent<CharacterController>());
-        Object.Destroy(prefab.GetComponent<Inventory>());
-        Object.Destroy(prefab.GetComponent<MonoBehaviour>());
-
-        var unwantedCameraComponents = new[]
-        {
-            "Main Cam Root", "Main Cam Root/Main Camera Shake Root/Main Camera",
-            "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera"
-        };
-
-        foreach (var path in unwantedCameraComponents)
-        {
-            var camObject = prefab.transform.Find(path);
-            if (camObject != null)
-            {
-                Object.Destroy(camObject.GetComponent<CRTEffect>());
-                Object.Destroy(camObject.GetComponent<PostProcessVolume>());
-                Object.Destroy(camObject.GetComponent<PostProcessLayer>());
-                Object.Destroy(camObject.GetComponent<Camera>());
-                Object.Destroy(camObject.GetComponent<CameraShaderController>());
-            }
-        }
-
-        var unwantedGameObjects = new[]
-        {
-            "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory",
-            "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/InventoryBagCamera",
-            "Main Cam Target", "Capsule", "Particle System", "Wind Sound", "Fatigue Sound",
-            "CorruptionSurround", "Aim Circle", "Fake Handholds", "FXCam", "EffectRoot", "Death Sound"
-        };
-
-        foreach (var path in unwantedGameObjects)
-        {
-            var unwantedObject = prefab.transform.Find(path);
-            if (unwantedObject != null) Object.Destroy(unwantedObject.gameObject);
-        }
-    }
-
+    /// <summary>
+    /// Starts a host: spins up a local server and then connects the client to it.
+    /// </summary>
     public void StartHost()
     {
-        if (NetworkManager.Singleton == null) return;
-        CreatePlayerPrefab();
-        logger.LogDebug("Starting Host...");
+        // TODO: replace these variables with something better
+        ushort maxClients = 10;
+        ushort port = 7777;
+        string address = "127.0.0.1";
 
+        InitializeWKNetworking();
+        
         try
         {
-            NetworkManager.Singleton.StartHost();
-            CommandConsole.Log("Host started!");
-            logger.LogInfo("Host started!");
+            LogManager.Info($"Starting host on port {port} (max {maxClients})...");
+            networkServer.StartServer(port, maxClients);
+
+            // Connect local client to server
+            LogManager.Info($"Connecting local client to {address}:{port}...");
+            networkClient.StartClient(address, port);
+
+            LogManager.Info("Host started successfully.");
+
         }
         catch (Exception ex)
         {
-            CommandConsole.LogError($"Unable to initialize host! Ex:{ex}");
-            logger.LogError($"Unable to initialize host! Ex:{ex}");
+            LogManager.Error($"Failed to start host: {ex.Message}");
         }
     }
 
-    public void StartClient()
+    /// <summary>
+    /// Connects as a client to an existing host.
+    /// </summary>
+    public void StartClient(string serverAddress = "127.0.0.1", ushort serverPort = 7777)
     {
-        if (NetworkManager.Singleton == null) return;
-        CreatePlayerPrefab();
-        logger.LogDebug("Starting Client...");
+        InitializeWKNetworking();
 
         try
         {
-            NetworkManager.Singleton.StartClient();
-            CommandConsole.Log("Client started!");
-            logger.LogInfo("Client started!");
+            LogManager.Info($"Connecting to server at {serverAddress}:{serverPort}...");
+            networkClient.StartClient(serverAddress, serverPort);
         }
         catch (Exception ex)
         {
-            logger.LogError($"Unable to initialize client! Ex:{ex}");
+            LogManager.Error($"Failed to start client: {ex}");
         }
     }
 
-    public void OnClientConnect(ulong clientId)
+    /// <summary>
+    /// Disconnect this client (if connected).
+    /// </summary>
+    public void DisconnectClient()
     {
-        if ((ulong)SteamClient.SteamId == clientId)
+        if (networkClient != null && networkClient.Client == null) return;
+
+        try
         {
-            logger.LogError("Cannot instantiate self!");
-            return;
+            LogManager.Info("Disconnecting client...");
+            networkClient.Client.Disconnect();
+            LogManager.Info("Client disconnected.");
         }
-
-        if (NetworkManager.Singleton.NetworkConfig.PlayerPrefab == null)
+        catch (Exception ex)
         {
-            logger.LogError("Player prefab not registered!");
-            return;
+            LogManager.Error($"Failed to disconnect client: {ex}");
         }
-
-        GameObject player = Object.Instantiate(NetworkManager.Singleton.NetworkConfig.PlayerPrefab);
-        player.SetActive(true);
-
-        var networkObject = player.GetComponent<NetworkObject>();
-        if (networkObject == null)
-        {
-            logger.LogError("Instantiated player missing NetworkObject component!");
-            return;
-        }
-
-        networkObject.name = $"{PlayerPrefabName}({clientId})";
-        networkObject.SpawnAsPlayerObject(clientId);
-        logger.LogInfo("Client connected to lobby!");
     }
 
-    public void OnClientDisconnect(ulong clientId)
+    public void StopServer()
     {
-        Object.Destroy(GameObject.Find($"{PlayerPrefabName}({clientId})"));
+        if (networkServer != null && networkServer.Server == null) return;
+
+        try
+        {
+            LogManager.Info("Stopping server...");
+            networkServer.StopServer();
+            LogManager.Info("Server stopped.");
+        }
+        catch (Exception ex)
+        {
+            LogManager.Error($"Failed to stop server: {ex}");
+        }
     }
+    
+    private void LogLocalIps()
+    {
+        try
+        {
+            var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    LogManager.Info($"Your local IP is {ip}. Others can join with 'localjoin {ip}'");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LogManager.Error($"Failed to get local IP addresses: {ex.Message}");
+        }
+    }
+    
 }

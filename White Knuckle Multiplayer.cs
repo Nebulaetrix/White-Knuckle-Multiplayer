@@ -1,7 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
 using UnityEngine.SceneManagement;
-using Unity.Netcode;
 using White_Knuckle_Multiplayer.Managers;
 using White_Knuckle_Multiplayer.Networking;
 
@@ -10,17 +9,17 @@ namespace White_Knuckle_Multiplayer;
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 public class WkMultiplayer : BaseUnityPlugin
 {
-    private ManualLogSource logger;
     private bool loaded = false;
 
     public static GameManager GameManager;
     private CommandManager commandManager;
+    private CoroutineRunner coroutineRunner;
 
     private void Awake()
     {
-        logger = base.Logger;
+        LogManager.Init(base.Logger);
 
-        GameManager = new GameManager(logger);
+        GameManager = new GameManager();
 
         SceneManager.sceneLoaded += OnSceneLoad;
 
@@ -32,11 +31,21 @@ public class WkMultiplayer : BaseUnityPlugin
         switch (loaded)
         {
             case false when scene.name == "Game-Main":
-                GameManager.InitializeNetworkManager();
-                commandManager = new CommandManager(GameManager, logger,
-                    NetworkManager.Singleton.GetComponent<CoroutineRunner>());
-
-                NetworkManager.Singleton.LogLevel = Unity.Netcode.LogLevel.Developer;
+                // Initialize only Mirage networking
+                GameManager.InitializeWKNetworking();
+                
+                // Setup the coroutine runner
+                if (coroutineRunner == null)
+                {
+                    var coroutineObject = new UnityEngine.GameObject("CoroutineRunner");
+                    UnityEngine.Object.DontDestroyOnLoad(coroutineObject);
+                    coroutineRunner = coroutineObject.AddComponent<CoroutineRunner>();
+                    LogManager.Info("Created CoroutineRunner");
+                }
+                
+                // Initialize command manager with all required parameters
+                commandManager = new CommandManager(GameManager, coroutineRunner, coroutineRunner);
+                
                 AddCommands();
                 loaded = true;
                 break;
@@ -49,8 +58,19 @@ public class WkMultiplayer : BaseUnityPlugin
 
     private void AddCommands()
     {
-        CommandConsole.AddCommand("host", commandManager.HandleHostCommand, false);
-        CommandConsole.AddCommand("join", commandManager.HandleJoinCommand, false);
+        if (commandManager == null)
+        {
+            LogManager.Error("Cannot add commands - CommandManager is null");
+            return;
+        }
+        
+        // Direct Mirage networking commands
+        CommandConsole.AddCommand("host", commandManager.HandleLocalHostCommand, false);
+        CommandConsole.AddCommand("join", commandManager.HandleLocalJoinCommand, false);
         CommandConsole.AddCommand("disconnect", commandManager.HandleDisconnectCommand, false);
+        CommandConsole.AddCommand("localhost", commandManager.HandleLocalHostCommand, false);
+        CommandConsole.AddCommand("localjoin", commandManager.HandleLocalJoinCommand, false);
+        
+        LogManager.Info("Commands registered successfully");
     }
 }
