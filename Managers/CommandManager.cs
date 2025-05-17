@@ -57,19 +57,19 @@ internal class CommandManager
             serverPort = ushort.Parse(args[1]);
         }
 
-            LogManager.Info($"Joining local Mirage server at {serverAddress}...");
+            LogManager.Info($"Joining localWKNetworkingserver at {serverAddress}...");
         
         try
         {
             // Start the client
             gameManager.StartClient(serverAddress, serverPort);
             
-            CommandConsole.Log($"Connecting to local Mirage server at {serverAddress}...");
+            CommandConsole.Log($"Connecting to localWKNetworkingserver at {serverAddress}...");
         }
         catch (Exception ex)
         {
-            LogManager.Error($"Error connecting to Mirage server: {ex.Message}");
-            CommandConsole.LogError($"Error connecting to Mirage server: {ex.Message}");
+            LogManager.Error($"Error connecting to  server: {ex.Message}");
+            CommandConsole.LogError($"Error connecting toWKNetworkingserver: {ex.Message}");
         }
     }
 
@@ -78,9 +78,9 @@ internal class CommandManager
         LogManager.Info("HandleDisconnectCommand called");
         try
         {
-            CommandConsole.Log("Disconnecting from Mirage server/stopping Mirage server...");
+            CommandConsole.Log("Disconnecting fromWKNetworkingserver/stoppingWKNetworkingserver...");
             gameManager.DisconnectClient();
-            CommandConsole.Log("Disconnected from Mirage network");
+            CommandConsole.Log("Disconnected fromWKNetworkingnetwork");
         }
         catch (Exception ex)
         {

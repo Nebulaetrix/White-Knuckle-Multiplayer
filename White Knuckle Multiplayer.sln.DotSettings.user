@@ -10,4 +10,5 @@
   &lt;Assembly Path="C:\Users\Thiev\Documents\White Knuckle Multiplayer\deps\Unity.Netcode.Components.dll" /&gt;&#xD;
   &lt;Assembly Path="C:\Users\Thiev\Documents\White Knuckle Multiplayer\deps\Unity.Collections.dll" /&gt;&#xD;
   &lt;Assembly Path="C:\Users\Thiev\Documents\White Knuckle Multiplayer\deps\Unity.Mathematics.dll" /&gt;&#xD;
-&lt;/AssemblyExplorer&gt;</s:String></wpf:ResourceDictionary>
+&lt;/AssemblyExplorer&gt;</s:String>
+	</wpf:ResourceDictionary>

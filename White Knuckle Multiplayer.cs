@@ -31,7 +31,7 @@ public class WkMultiplayer : BaseUnityPlugin
         switch (loaded)
         {
             case false when scene.name == "Game-Main":
-                // Initialize only Mirage networking
+                // Initialize Riptide Networking
                 GameManager.InitializeWKNetworking();
                 
                 // Setup the coroutine runner
@@ -64,12 +64,10 @@ public class WkMultiplayer : BaseUnityPlugin
             return;
         }
         
-        // Direct Mirage networking commands
+        // Add commands to CommandConsole
         CommandConsole.AddCommand("host", commandManager.HandleLocalHostCommand, false);
         CommandConsole.AddCommand("join", commandManager.HandleLocalJoinCommand, false);
         CommandConsole.AddCommand("disconnect", commandManager.HandleDisconnectCommand, false);
-        CommandConsole.AddCommand("localhost", commandManager.HandleLocalHostCommand, false);
-        CommandConsole.AddCommand("localjoin", commandManager.HandleLocalJoinCommand, false);
         
         LogManager.Info("Commands registered successfully");
     }

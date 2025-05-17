@@ -50,12 +50,20 @@ namespace White_Knuckle_Multiplayer.Networking
         public ushort NetID;
         public Vector3 Position;
         public Quaternion Rotation;
-        
-        public PlayerData(ushort playerID, Vector3 position, Quaternion rotation)
+        public Vector3 HandLeftPosition;
+        public Vector3 HandRightPosition;
+        public string HandLeftState;
+        public string HandRightState;
+        public PlayerData(ushort playerID, Vector3 position, Quaternion rotation,
+            Vector3 handLeftPosition, Vector3 handRightPosition, string handLeftState, string handRightState)
         {
             NetID = playerID;
             Position = position;
             Rotation = rotation;
+            HandLeftPosition = handLeftPosition;
+            HandRightPosition = handRightPosition;
+            HandLeftState = handLeftState;
+            HandRightState = handRightState;
         }
 
         public void Serialize(Riptide.Message message)
@@ -66,12 +74,26 @@ namespace White_Knuckle_Multiplayer.Networking
             message.AddFloat(Position.x);
             message.AddFloat(Position.y);
             message.AddFloat(Position.z);
-
+            
             // Quaternion
             message.AddFloat(Rotation.x);
             message.AddFloat(Rotation.y);
             message.AddFloat(Rotation.z);
             message.AddFloat(Rotation.w);
+            
+            // Vector3
+            message.AddFloat(HandLeftPosition.x);
+            message.AddFloat(HandLeftPosition.y);
+            message.AddFloat(HandLeftPosition.z);
+            
+            // Vector3
+            message.AddFloat(HandRightPosition.x);
+            message.AddFloat(HandRightPosition.y);
+            message.AddFloat(HandRightPosition.z);
+            
+            // String
+            message.AddString(HandLeftState);
+            message.AddString(HandRightState);
         }
 
         public void Deserialize(Riptide.Message message)
@@ -90,6 +112,22 @@ namespace White_Knuckle_Multiplayer.Networking
             float rz = message.GetFloat();
             float rw = message.GetFloat();
             Rotation = new Quaternion(rx, ry, rz, rw);
+            
+            // Vector3
+            float handLeftX = message.GetFloat();
+            float handLeftY = message.GetFloat();
+            float handLeftZ = message.GetFloat();
+            HandLeftPosition = new Vector3(handLeftX, handLeftY, handLeftZ);
+            
+            // Vector3
+            float handRightX = message.GetFloat();
+            float handRightY = message.GetFloat();
+            float handRightZ = message.GetFloat();
+            HandLeftPosition = new Vector3(handRightX, handRightY, handRightZ);
+            
+            // String
+            HandLeftState = message.GetString();
+            HandRightState = message.GetString();
         }
     }
 
@@ -335,6 +373,9 @@ namespace White_Knuckle_Multiplayer.Networking
 
             prefab.name = $"{playerPrefabName}_{netID}";
             prefab.SetActive(false);
+            
+            // Add network controller and initialize with netID
+            prefab.AddComponent<PlayerNetworkController>().Initialize(netID);
 
             LogManager.Net.Info($"Instantiated Networked Player Prefab for ID {netID}");
 
