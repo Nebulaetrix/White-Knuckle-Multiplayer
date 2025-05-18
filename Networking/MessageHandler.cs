@@ -123,7 +123,7 @@ namespace White_Knuckle_Multiplayer.Networking
             float handRightX = message.GetFloat();
             float handRightY = message.GetFloat();
             float handRightZ = message.GetFloat();
-            HandLeftPosition = new Vector3(handRightX, handRightY, handRightZ);
+            HandRightPosition = new Vector3(handRightX, handRightY, handRightZ);
             
             // String
             HandLeftState = message.GetString();
