@@ -42,7 +42,7 @@ namespace White_Knuckle_Multiplayer.Networking
                 Vector3 handLeftPos = HandLeft.transform.position;
                 String handLeftState = Sprite.GetName(HandLeft.GetComponent<SpriteRenderer>().sprite);
                 String handRightState = Sprite.GetName(HandRight.GetComponent<SpriteRenderer>().sprite);
-                MessageSender.SendPlayerData(new PlayerData(netID,pos, rot, handRightPos, handLeftPos, handLeftState, handRightState));
+                MessageSender.SendPlayerData(new PlayerData(netID,pos, rot, handLeftPos, handRightPos, handLeftState, handRightState));
         }
 
         private void OnEnable()
