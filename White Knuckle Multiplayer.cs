@@ -28,28 +28,32 @@ public class WkMultiplayer : BaseUnityPlugin
 
     private void OnSceneLoad(Scene scene, LoadSceneMode mode)
     {
+        // ADDED CASE FOR "Intro" SCENE
+        if (scene.name == "Intro")
+        {
+            SceneManager.LoadScene("Main-Menu");
+            return; 
+        }
+
         switch (loaded)
         {
             case false when scene.name == "Game-Main":
-                // Initialize Riptide Networking
                 GameManager.InitializeWKNetworking();
-                
-                // Setup the coroutine runner
+                    
                 if (coroutineRunner == null)
                 {
                     var coroutineObject = new UnityEngine.GameObject("CoroutineRunner");
                     UnityEngine.Object.DontDestroyOnLoad(coroutineObject);
                     coroutineRunner = coroutineObject.AddComponent<CoroutineRunner>();
-                    LogManager.Info("Created CoroutineRunner");
+                    // LogManager.Info("Created CoroutineRunner"); // Original comment
                 }
-                
-                // Initialize command manager with all required parameters
+                    
                 commandManager = new CommandManager(GameManager, coroutineRunner, coroutineRunner);
-                
+                    
                 AddCommands();
                 loaded = true;
                 break;
-                
+                    
             case true when scene.name == "Game-Main":
                 AddCommands();
                 break;

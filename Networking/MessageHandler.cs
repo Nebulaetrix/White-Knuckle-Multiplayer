@@ -13,6 +13,7 @@ namespace White_Knuckle_Multiplayer.Networking
     /// Defines the Unique <see cref="ushort"/> MessageID,
     /// for the client/server to know what the message contains
     /// </summary>
+    
     public enum MessageID : ushort
     {
         Unknown = 0,
@@ -24,7 +25,6 @@ namespace White_Knuckle_Multiplayer.Networking
         DespawnPlayer = 6,
         SceneChange = 7, // This one will propably be replaced
     }
-
     /// <summary>
     /// GroupID, that defines what is server and what client
     /// </summary>
@@ -515,6 +515,7 @@ namespace White_Knuckle_Multiplayer.Networking
         // Instantiates the networked copy
         private GameObject InstantiatePlayerPrefab(GameObject player, ushort netID)
         {
+            GameObject capsule;
             GameObject prefab = Object.Instantiate(player);
             Object.DontDestroyOnLoad(prefab);
             
@@ -527,7 +528,8 @@ namespace White_Knuckle_Multiplayer.Networking
             HandsNetworkController leftHandController = prefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory-Root/Left_Hand_Target/Item_Hand_Left/Item_Hands_Left").gameObject.AddComponent<HandsNetworkController>().Initialize(netID);
             HandsNetworkController rightHandController = prefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory-Root/Right_Hand_Target/Item_Hand_Right/Item_Hands_Right").gameObject.AddComponent<HandsNetworkController>().Initialize(netID);
             prefab.AddComponent<PlayerNetworkController>().Initialize(netID, leftHandController, rightHandController);
-
+            capsule = prefab.transform.Find("Capsule").gameObject;
+            capsule.layer = LayerMask.NameToLayer("Player");
             LogManager.Net.Info($"Instantiated Networked Player Prefab for ID {netID}");
 
             return prefab;
@@ -561,7 +563,8 @@ namespace White_Knuckle_Multiplayer.Networking
             {
             "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory",
             "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/InventoryBagCamera",
-            "Main Cam Target", "Capsule", "Particle System", "Wind Sound", "Fatigue Sound",
+            "Main Cam Target", "Particle System", "Wind Sound", "Fatigue Sound",
+            "Main Cam Target", "Particle System", "Wind Sound", "Fatigue Sound",
             "CorruptionSurround", "Aim Circle", "Fake Handholds", "FXCam", "EffectRoot", "Death Sound"
         };
 

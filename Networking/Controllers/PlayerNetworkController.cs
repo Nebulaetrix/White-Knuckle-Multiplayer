@@ -22,6 +22,7 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
         private HandsNetworkController HandRightController;
         private HandsNetworkController HandLeftController;
         private bool isLocal = false;
+        
 
         public void Initialize(ushort netID, HandsNetworkController leftHandController, HandsNetworkController rightHandController)
         {
@@ -108,6 +109,8 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
         /// <param name="handRightpos"><see cref="Vector3"/> Right Hand Position</param>
         /// <param name="handLeftstate"><see cref="string"/> State of the Left Hand</param>
         /// <param name="handRightstate"><see cref="string"/> State of the Right hand</param>
+        /// <param name = "handLeftColor"><see cref="Color"/> Color of the Left Hand</param>
+        /// <param name = "handRightColor"><see cref="Color"/> Color of the Right Hand</param>
         public void UpdateHands(Vector3 handLeftpos, Vector3 handRightpos, string handLeftstate, string handRightstate, Color handLeftColor, Color handRightColor)
         {
             // Left Hand

@@ -11,7 +11,7 @@ namespace White_Knuckle_Multiplayer.Managers;
 
 public class GameManager
 {
-    
+
     private const string WKNetworkingObjectName = "WKNetworking";
     private const string PlayerObjectName = "CL_Player";
     private const string PlayerPrefabName = "CL_Player_Network_Prefab";
@@ -23,29 +23,29 @@ public class GameManager
 
     public GameManager()
     {
-        
+
     }
-    
+
     public void InitializeWKNetworking()
     {
         if (WKNetworkingObject != null) return;
-        
+
         // Persistent GameObject holding all networking stuff
         WKNetworkingObject = new GameObject(WKNetworkingObjectName);
         Object.DontDestroyOnLoad(WKNetworkingObject);
-        
+
         // Attaching Networked objects to it
         networkClient = WKNetworkingObject.AddComponent<NetworkClient>();
         networkServer = WKNetworkingObject.AddComponent<NetworkServer>();
         messageHandler = WKNetworkingObject.AddComponent<MessageHandler>();
-        
+
         SpriteCache.Preload(
             "Hands_idle",
             "Hands_grip",
             "HandsReach"
-            );
-        
-        
+        );
+
+
         LogManager.Info("Initialized WKNetworking");
     }
 
@@ -60,7 +60,7 @@ public class GameManager
         string address = "127.0.0.1";
 
         InitializeWKNetworking();
-        
+
         try
         {
             LogManager.Info($"Starting host on port {port} (max {maxClients})...");
@@ -131,7 +131,7 @@ public class GameManager
             LogManager.Error($"Failed to stop server: {ex}");
         }
     }
-    
+
     private void LogLocalIps()
     {
         try
@@ -150,5 +150,5 @@ public class GameManager
             LogManager.Error($"Failed to get local IP addresses: {ex.Message}");
         }
     }
-    
+
 }

@@ -20,7 +20,6 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
         private string lastState = "hands_idle";
         private bool isLocal = false;
         private Transform handParent;
-        
         // Lerping variables
         private bool hasReceivedFirstUpdate = false;
         private float positionLerpSpeed = 5f;
