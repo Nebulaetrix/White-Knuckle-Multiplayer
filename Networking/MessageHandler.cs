@@ -77,8 +77,11 @@ namespace White_Knuckle_Multiplayer.Networking
         public Vector3 HandRightPosition;
         public string HandLeftState;
         public string HandRightState;
+        public Color HandLeftColor;  
+        public Color HandRightColor; 
+
         public PlayerData(ushort playerID, Vector3 position, Quaternion rotation,
-            Vector3 handLeftPosition, Vector3 handRightPosition, string handLeftState, string handRightState)
+            Vector3 handLeftPosition, Vector3 handRightPosition, string handLeftState, string handRightState, Color handLeftColor, Color handRightColor)
         {
             NetID = playerID;
             Position = position;
@@ -87,6 +90,9 @@ namespace White_Knuckle_Multiplayer.Networking
             HandRightPosition = handRightPosition;
             HandLeftState = handLeftState;
             HandRightState = handRightState;
+            HandLeftColor = handLeftColor;
+            HandRightColor = handRightColor;
+            
         }
 
         // Data needs to be deconstructed to its core components,
@@ -119,6 +125,19 @@ namespace White_Knuckle_Multiplayer.Networking
             // Hand States - String
             message.AddString(HandLeftState);
             message.AddString(HandRightState);
+                        
+            // Vector4, Left Hand Color
+            message.AddFloat(HandLeftColor.r);
+            message.AddFloat(HandLeftColor.g);
+            message.AddFloat(HandLeftColor.b);
+            message.AddFloat(HandLeftColor.a);
+
+            
+            // Vector4, Right Hand Color
+            message.AddFloat(HandRightColor.r);
+            message.AddFloat(HandRightColor.g);
+            message.AddFloat(HandRightColor.b);
+            message.AddFloat(HandRightColor.a);
         }
 
         // Reconstruct the message from basic types to advanced ones
@@ -156,6 +175,20 @@ namespace White_Knuckle_Multiplayer.Networking
             // Hand States - String
             HandLeftState = message.GetString();
             HandRightState = message.GetString();
+            
+            // Hand Color - Vector4
+            float rL = message.GetFloat();
+            float gL = message.GetFloat();
+            float bL = message.GetFloat();
+            float aL = message.GetFloat();
+            HandLeftColor = new Color(rL, gL, bL, aL);
+
+            // Hand Color - Vector4
+            float rR = message.GetFloat();
+            float gR = message.GetFloat();
+            float bR = message.GetFloat();
+            float aR = message.GetFloat();
+            HandRightColor = new Color(rR, gR, bR, aR);
         }
     }
 
@@ -406,7 +439,7 @@ namespace White_Knuckle_Multiplayer.Networking
                 // Passes data recieved from the message to the components to do synchronization
                 playerNetworkController.UpdateHands(
                     data.HandLeftPosition, data.HandRightPosition,
-                    data.HandLeftState, data.HandRightState
+                    data.HandLeftState, data.HandRightState, data.HandLeftColor, data.HandRightColor
                 );
                 playerNetworkController.UpdatePositionRotation(data.Position, data.Rotation);
             }

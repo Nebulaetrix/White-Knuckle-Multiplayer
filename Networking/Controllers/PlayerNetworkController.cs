@@ -79,8 +79,10 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
                 Vector3 handLeftPos = HandLeftController.handPosition;
                 String handLeftState = HandLeftController.handState;
                 String handRightState = HandRightController.handState;
+                Color handLeftColor = HandLeftController.handColor;   
+                Color handRightColor = HandRightController.handColor; 
                 MessageSender.SendPlayerData(new PlayerData(
-                        NetID,pos, rot, handLeftPos, handRightPos, handLeftState, handRightState
+                        NetID,pos, rot, handLeftPos, handRightPos, handLeftState, handRightState, handLeftColor, handRightColor 
                     )
                 );
             }
@@ -106,15 +108,16 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
         /// <param name="handRightpos"><see cref="Vector3"/> Right Hand Position</param>
         /// <param name="handLeftstate"><see cref="string"/> State of the Left Hand</param>
         /// <param name="handRightstate"><see cref="string"/> State of the Right hand</param>
-        public void UpdateHands(Vector3 handLeftpos, Vector3 handRightpos, string handLeftstate, string handRightstate)
+        public void UpdateHands(Vector3 handLeftpos, Vector3 handRightpos, string handLeftstate, string handRightstate, Color handLeftColor, Color handRightColor)
         {
             // Left Hand
             HandLeftController.UpdateHandPosition(handLeftpos);
             HandLeftController.UpdateHandState(handLeftstate);
-            
+            HandLeftController.UpdateHandColor(handLeftColor); 
             // Right hand
             HandRightController.UpdateHandPosition(handRightpos);
             HandRightController.UpdateHandState(handRightstate);
+            HandRightController.UpdateHandColor(handRightColor); 
         }
     }
 }

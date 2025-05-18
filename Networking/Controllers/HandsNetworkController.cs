@@ -14,7 +14,7 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
         // Expose final variables to other scripts
         public Vector3 handPosition = Vector3.zero;
         public string handState = "hands_idle";
-        
+        public Color handColor = Color.white; 
         // Internal Variables
         private SpriteRenderer spriteRenderer;
         private string lastState = "hands_idle";
@@ -69,6 +69,7 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
                     LogManager.Client.Warn($"Player Hand Position for ID {NetID} teleported");
                     handParent.transform.position = pos;
                     hasReceivedFirstUpdate = true;
+                    
                 }
             }
             else
@@ -76,6 +77,7 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
                 // Player is local, set final vars for sending
                 handState = spriteRenderer.sprite.name;
                 handPosition = handParent.transform.position;
+                handColor = spriteRenderer.color; 
             }
         }
 
@@ -110,7 +112,12 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
 
             lastState = state;
         }
+        public void UpdateHandColor(Color newColor) 
+        {
+            spriteRenderer.color = newColor;
+        }
     }
+    
     
     /// <summary>
     /// Class for loading/storing certain Sprites, e.g., Hands.
