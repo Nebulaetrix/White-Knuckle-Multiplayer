@@ -149,7 +149,6 @@ namespace White_Knuckle_Multiplayer.Networking
             NetID = msg.GetUShort();
         }
     }
-
     public struct SceneChangeData : IMessageSerializable
     {
         public string SceneName;
@@ -242,7 +241,6 @@ namespace White_Knuckle_Multiplayer.Networking
         // HANDLERS //
 
         // SERVER‑SIDE HANDLERS (groupId = 0)
-
         [MessageHandler((ushort)MessageID.JoinRequest, 0)]
         private static void HandleJoinRequest_Server(ushort clientId, Riptide.Message msg)
         {
@@ -306,8 +304,11 @@ namespace White_Knuckle_Multiplayer.Networking
         {
             PlayerData data = msg.GetSerializable<PlayerData>();
             if (Instance._players.TryGetValue(data.NetID, out var go))
+            {
                 // Separating game logic from network logic
                 go.GetComponent<PlayerNetworkController>().UpdatePositionRotation(data.Position, data.Rotation);
+                go.GetComponent<PlayerNetworkController>().UpdateHands(data.HandLeftPosition, data.HandRightPosition, data.HandLeftState, data.HandRightState);
+            }
         }
 
         [MessageHandler((ushort)MessageID.SceneChange, 1)]
@@ -393,7 +394,6 @@ namespace White_Knuckle_Multiplayer.Networking
             "Main Cam Root", "Main Cam Root/Main Camera Shake Root/Main Camera",
             "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera"
         };
-
             foreach (var path in unwantedCameraComponents)
             {
                 var camObject = prefab.transform.Find(path);

@@ -39,10 +39,9 @@ internal class CommandManager
         catch (Exception ex)
         {
             LogManager.Error($"Error starting WKNetworking server: {ex.Message}");
-            CommandConsole.LogError($"Error starting WKNetworking server: {ex.Message}");
+            CommandConsole.LogError($"Error starting WKNetworking  server: {ex.Message}");
         }
     }
-    
     public void HandleLocalJoinCommand(string[] args)
     {
         string serverAddress = "127.0.0.1";
@@ -57,19 +56,19 @@ internal class CommandManager
             serverPort = ushort.Parse(args[1]);
         }
 
-            LogManager.Info($"Joining localWKNetworkingserver at {serverAddress}...");
+        LogManager.Info($"Joining local WKNetworking server at {serverAddress}...");
         
         try
         {
             // Start the client
             gameManager.StartClient(serverAddress, serverPort);
             
-            CommandConsole.Log($"Connecting to localWKNetworkingserver at {serverAddress}...");
+            CommandConsole.Log($"Connecting to local WKNetworking server at {serverAddress}...");
         }
         catch (Exception ex)
         {
             LogManager.Error($"Error connecting to  server: {ex.Message}");
-            CommandConsole.LogError($"Error connecting toWKNetworkingserver: {ex.Message}");
+            CommandConsole.LogError($"Error connecting to WKNetworking server: {ex.Message}");
         }
     }
 
@@ -78,9 +77,9 @@ internal class CommandManager
         LogManager.Info("HandleDisconnectCommand called");
         try
         {
-            CommandConsole.Log("Disconnecting fromWKNetworkingserver/stoppingWKNetworkingserver...");
+            CommandConsole.Log("Disconnecting from WKNetworking server/stopping WKNetworking server...");
             gameManager.DisconnectClient();
-            CommandConsole.Log("Disconnected fromWKNetworkingnetwork");
+            CommandConsole.Log("Disconnected from WKNetworking server");
         }
         catch (Exception ex)
         {
