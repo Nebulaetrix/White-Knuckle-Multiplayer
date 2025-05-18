@@ -23,7 +23,7 @@ public class WkMultiplayer : BaseUnityPlugin
 
         SceneManager.sceneLoaded += OnSceneLoad;
 
-        Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+        LogManager.Info($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
     }
 
     private void OnSceneLoad(Scene scene, LoadSceneMode mode)

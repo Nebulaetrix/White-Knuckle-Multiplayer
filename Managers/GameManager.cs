@@ -4,6 +4,7 @@ using BepInEx.Logging;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 using White_Knuckle_Multiplayer.Networking;
+using White_Knuckle_Multiplayer.Networking.Controllers;
 using Object = UnityEngine.Object;
 
 namespace White_Knuckle_Multiplayer.Managers;
@@ -37,6 +38,12 @@ public class GameManager
         networkClient = WKNetworkingObject.AddComponent<NetworkClient>();
         networkServer = WKNetworkingObject.AddComponent<NetworkServer>();
         messageHandler = WKNetworkingObject.AddComponent<MessageHandler>();
+        
+        SpriteCache.Preload(
+            "Hands_idle",
+            "Hands_grip",
+            "HandsReach"
+            );
         
         
         LogManager.Info("Initialized WKNetworking");

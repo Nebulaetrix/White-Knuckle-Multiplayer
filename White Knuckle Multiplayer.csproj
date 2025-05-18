@@ -40,6 +40,9 @@
 		  <HintPath>deps\RiptideNetworking.dll</HintPath>
 		  <Private>True</Private>
 		</Reference>
+		<Reference Include="Steamworks.NET">
+		  <HintPath>deps\Steamworks.NET.dll</HintPath>
+		</Reference>
 		<Reference Include="Unity.Collections">
 			<HintPath>deps\Unity.Collections.dll</HintPath>
 		</Reference>

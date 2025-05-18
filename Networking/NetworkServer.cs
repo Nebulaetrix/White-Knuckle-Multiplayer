@@ -48,7 +48,7 @@ namespace White_Knuckle_Multiplayer.Networking
             Server = new Server();
             Server.ClientConnected += OnClientConnected;
             Server.ClientDisconnected += OnClientDisconnected;
-            Server.Start(port, maxClientCount, messageHandlerGroupId: 0, useMessageHandlers: true);
+            Server.Start(port, maxClientCount, messageHandlerGroupId: (byte)GroupID.Server, useMessageHandlers: true);
 
             LogManager.Server.Info($"Server Started on port {port}");
         }
@@ -71,7 +71,7 @@ namespace White_Knuckle_Multiplayer.Networking
         private void OnClientDisconnected(object sender, ServerDisconnectedEventArgs e)
         {
             LogManager.Server.Info($"Client {e.Client.Id} disconnected");
-            MessageHandler.Instance.DespawnPlayer(e.Client.Id);
+            MessageSender.SendDespawn(e.Client.Id);
         }
     }
 }

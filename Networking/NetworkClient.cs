@@ -30,7 +30,8 @@ namespace White_Knuckle_Multiplayer.Networking
             // Setting up Riptide Logger
             RiptideLogger.Initialize(LogManager.Client.Debug, LogManager.Client.Info, LogManager.Client.Warn, LogManager.Client.Error, false);
         }
-        private void FixedUpdate()
+        
+        private void Update()
         {
             if (Client != null)
             {
@@ -58,7 +59,7 @@ namespace White_Knuckle_Multiplayer.Networking
             Client.Connected += OnConnected;
             Client.Disconnected += OnDisconnected;
             Client.ConnectionFailed += OnConnectionFailed;
-            Client.Connect($"{ip}:{port}", maxConnectionAttempts: 5, messageHandlerGroupId: 1, message: null, useMessageHandlers: true);
+            Client.Connect($"{ip}:{port}", maxConnectionAttempts: 5, messageHandlerGroupId: (byte)GroupID.Client, message: null, useMessageHandlers: true);
         }
 
 

@@ -4,10 +4,15 @@ using System.Text;
 using UnityEngine;
 using Riptide;
 using UnityEngine.Rendering.PostProcessing;
+using White_Knuckle_Multiplayer.Networking.Controllers;
 using Object = UnityEngine.Object;
 
 namespace White_Knuckle_Multiplayer.Networking
 {
+    /// <summary>
+    /// Defines the Unique <see cref="ushort"/> MessageID,
+    /// for the client/server to know what the message contains
+    /// </summary>
     public enum MessageID : ushort
     {
         Unknown = 0,
@@ -16,22 +21,39 @@ namespace White_Knuckle_Multiplayer.Networking
         SteamAuthError = 3,
         PlayerDataSync = 4,
         SpawnPlayer = 5,
-        SceneChange = 6, // This one will propably be replaced
+        DespawnPlayer = 6,
+        SceneChange = 7, // This one will propably be replaced
+    }
+
+    /// <summary>
+    /// GroupID, that defines what is server and what client
+    /// </summary>
+    public enum GroupID : byte
+    {
+        Server = 0,
+        Client = 1,
     }
 
     // DATA STRUCTS //
-
+    // Responsible for Containing the data within the message
+    // Can only handle basic types, NOT VECTOR3
+    // Advanced types must be deconstructed to basic types
+    
+    /// <summary>
+    /// The Message that gets sent when player joins
+    /// </summary>
     public struct JoinRequestData : IMessageSerializable
     {
         public string Username;
         public string Version;
+        
         
         public JoinRequestData(string username, string version)
         {
             Username = username;
             Version = version;
         }
-
+        
         public void Serialize(Riptide.Message message)
         {
             message.AddString(Username);
@@ -45,6 +67,7 @@ namespace White_Knuckle_Multiplayer.Networking
         }
     }
 
+    // Message containing all the data that the networked copies(other player) need to set on their end
     public struct PlayerData : IMessageSerializable
     {
         public ushort NetID;
@@ -66,71 +89,77 @@ namespace White_Knuckle_Multiplayer.Networking
             HandRightState = handRightState;
         }
 
+        // Data needs to be deconstructed to its core components,
+        // So it can be sent over the network in this message
         public void Serialize(Riptide.Message message)
         {
             message.AddUShort(NetID);
 
-            // Vector3
+            // Player Position - Vector3
             message.AddFloat(Position.x);
             message.AddFloat(Position.y);
             message.AddFloat(Position.z);
             
-            // Quaternion
+            // Player Rotation - Quaternion
             message.AddFloat(Rotation.x);
             message.AddFloat(Rotation.y);
             message.AddFloat(Rotation.z);
             message.AddFloat(Rotation.w);
             
-            // Vector3
+            // Left Hand - Vector3
             message.AddFloat(HandLeftPosition.x);
             message.AddFloat(HandLeftPosition.y);
             message.AddFloat(HandLeftPosition.z);
             
-            // Vector3
+            // Right Hand - Vector3
             message.AddFloat(HandRightPosition.x);
             message.AddFloat(HandRightPosition.y);
             message.AddFloat(HandRightPosition.z);
             
-            // String
+            // Hand States - String
             message.AddString(HandLeftState);
             message.AddString(HandRightState);
         }
 
+        // Reconstruct the message from basic types to advanced ones
+        // So that this struct can be used normally in code
+        // Without doing anything extra to get the correct type
         public void Deserialize(Riptide.Message message)
         {
             NetID = message.GetUShort();
 
-            // Vector3
+            // Player Position - Vector3
             float x = message.GetFloat();
             float y = message.GetFloat();
             float z = message.GetFloat();
             Position = new Vector3(x, y, z);
 
-            // Quaternion
+            // Player rotation - Quaternion
             float rx = message.GetFloat();
             float ry = message.GetFloat();
             float rz = message.GetFloat();
             float rw = message.GetFloat();
             Rotation = new Quaternion(rx, ry, rz, rw);
             
-            // Vector3
+            // Left Hand - Vector3
             float handLeftX = message.GetFloat();
             float handLeftY = message.GetFloat();
             float handLeftZ = message.GetFloat();
             HandLeftPosition = new Vector3(handLeftX, handLeftY, handLeftZ);
             
-            // Vector3
+            // Right Hand - Vector3
             float handRightX = message.GetFloat();
             float handRightY = message.GetFloat();
             float handRightZ = message.GetFloat();
             HandRightPosition = new Vector3(handRightX, handRightY, handRightZ);
             
-            // String
+            // Hand States - String
             HandLeftState = message.GetString();
             HandRightState = message.GetString();
         }
     }
 
+    // Message Containing the data for Spawning a networked copy (other players)
     public struct SpawnPlayerData : IMessageSerializable
     {
         public ushort NetID;
@@ -149,6 +178,9 @@ namespace White_Knuckle_Multiplayer.Networking
             NetID = msg.GetUShort();
         }
     }
+    
+    // Message for handling Scene Changes
+    // TODO: Replace with actual level synchronization
     public struct SceneChangeData : IMessageSerializable
     {
         public string SceneName;
@@ -168,8 +200,32 @@ namespace White_Knuckle_Multiplayer.Networking
         }
     }
 
+    // Message containing data for despawning networked copy (other players)
+    public struct DespawnPlayerData : IMessageSerializable
+    {
+        public ushort NetID;
+
+        public DespawnPlayerData(ushort netID)
+        {
+            NetID = netID;
+        }
+        
+        public void Serialize(Riptide.Message msg)
+        {
+            msg.AddUShort(NetID);
+        }
+
+        public void Deserialize(Riptide.Message msg)
+        {
+            NetID = msg.GetUShort();
+        }
+    }
+
     // (STATIC) MESSAGE SENDER //
 
+    /// <summary>
+    /// Static class for sending Messages over the network
+    /// </summary>
     public static class MessageSender
     {
         // Sending Request on join, server authorizes and keeps track of this
@@ -204,6 +260,8 @@ namespace White_Knuckle_Multiplayer.Networking
             LogManager.Net.Error("Cannot send PlayerDataSync: no client or server available.");
         }
 
+        // Sending Scene Change
+        // TODO: Replace this with actual level synchronization
         public static void SendSceneChange(string sceneName)
         {
             var data = new SceneChangeData(sceneName);
@@ -215,10 +273,24 @@ namespace White_Knuckle_Multiplayer.Networking
             else
                 NetworkClient.Instance.Client.Send(msg);
         }
+
+        // Sending DespawnPlayer to all connected clients
+        public static void SendDespawn(ushort netID)
+        {
+            var data = new DespawnPlayerData(netID);
+            var msg = Riptide.Message.Create(MessageSendMode.Reliable, (ushort)MessageID.DespawnPlayer);
+            msg.AddSerializable(data);
+            if (NetworkServer.Instance.isActive)
+                NetworkServer.Instance.Server.SendToAll(msg, netID);
+        }
     }
 
     // MESSAGE ROUTER && SPAWN MANAGER //
 
+    /// <summary>
+    /// Handles Incoming Message from the network,
+    /// only one instance exists always
+    /// </summary>
     public class MessageHandler : MonoBehaviour
     {
         public static MessageHandler Instance { get; private set; }
@@ -241,7 +313,10 @@ namespace White_Knuckle_Multiplayer.Networking
         // HANDLERS //
 
         // SERVER‑SIDE HANDLERS (groupId = 0)
-        [MessageHandler((ushort)MessageID.JoinRequest, 0)]
+        
+        // Handles JoinRequest,
+        // Spawns player for itself, relays message to all connected clients to also spawn the new player
+        [MessageHandler((ushort)MessageID.JoinRequest, (byte)GroupID.Server)]
         private static void HandleJoinRequest_Server(ushort clientId, Riptide.Message msg)
         {
             JoinRequestData data = msg.GetSerializable<JoinRequestData>();
@@ -252,7 +327,7 @@ namespace White_Knuckle_Multiplayer.Networking
             spawnMsg.AddSerializable(new SpawnPlayerData(clientId));
             NetworkServer.Instance.Server.SendToAll(spawnMsg);
 
-            // Always tell the new Client about host client, don't send this to host himself
+            // Always tell the new Client about the host client, don't send this to host himself
             if (clientId != 1)
             {
                 LogManager.Server.Info("Telling new client about host");
@@ -270,19 +345,21 @@ namespace White_Knuckle_Multiplayer.Networking
                 m.AddSerializable(new SpawnPlayerData(existingID));
                 NetworkServer.Instance.Server.Send(m, clientId);
             }
-
-            // Track on server
-            // Instance.SpawnPlayer(clientId); // No.
         }
 
-        [MessageHandler((ushort)MessageID.PlayerDataSync, 0)]
+        // Handles PlayerData synchronization
+        // this one acts as a relay, because the server doesn't need to do anything else with this
+        [MessageHandler((ushort)MessageID.PlayerDataSync, (byte)GroupID.Server)]
         private static void HandlePlayerDataSync_Server(ushort fromClientId, Riptide.Message msg)
         {
             // Relay to all except sender
             NetworkServer.Instance.Server.SendToAll(msg, fromClientId);
         }
 
-        [MessageHandler((ushort)MessageID.SceneChange, 0)]
+        // Handles SceneChange
+        // acts as a relay to other clients
+        // TODO: Replace with actual level synchronization
+        [MessageHandler((ushort)MessageID.SceneChange, (byte)GroupID.Server)]
         private static void HandleSceneChange_Server(ushort fromClientId, Riptide.Message msg)
         {
             // Relay scene‐change
@@ -291,7 +368,9 @@ namespace White_Knuckle_Multiplayer.Networking
 
         // CLIENT‑SIDE HANDLERS (groupId = 1)
 
-        [MessageHandler((ushort)MessageID.SpawnPlayer, 1)]
+        // Handles Spawning the player on the local game
+        // Gets the data, and spawn player with their NetworkID so they can be manipulated easily
+        [MessageHandler((ushort)MessageID.SpawnPlayer, (byte)GroupID.Client)]
         private static void HandleSpawnPlayer_Client(Riptide.Message msg)
         {
             SpawnPlayerData data = msg.GetSerializable<SpawnPlayerData>();
@@ -299,19 +378,43 @@ namespace White_Knuckle_Multiplayer.Networking
             Instance.SpawnPlayer_Internal(data.NetID);
         }
 
-        [MessageHandler((ushort)MessageID.PlayerDataSync, 1)]
+        // Handles Despawning players
+        // Handles the Message for despawning a client, this happens when the other client disconnects,
+        // Server notifies all other clients that this client disconnected
+        [MessageHandler((ushort)MessageID.DespawnPlayer, (byte)GroupID.Client)]
+        private static void HandleDespawnPlayer_Client(Riptide.Message msg)
+        {
+            DespawnPlayerData data = msg.GetSerializable<DespawnPlayerData>();
+            LogManager.Client.Info($"DespawnPlayer for ID {data.NetID}");
+            Instance.DespawnPlayer(data.NetID);
+        }
+
+        // Handles Player Data Synchronization
+        // Gets the data for a client identified with NetworkID
+        // Gets the networked clone and manipulates it
+        [MessageHandler((ushort)MessageID.PlayerDataSync, (byte)GroupID.Client)]
         private static void HandlePlayerDataSync_Client(Riptide.Message msg)
         {
             PlayerData data = msg.GetSerializable<PlayerData>();
+            
+            // Get the network clone
             if (Instance._players.TryGetValue(data.NetID, out var go))
             {
+                PlayerNetworkController playerNetworkController = go.GetComponent<PlayerNetworkController>();
+                
                 // Separating game logic from network logic
-                go.GetComponent<PlayerNetworkController>().UpdatePositionRotation(data.Position, data.Rotation);
-                go.GetComponent<PlayerNetworkController>().UpdateHands(data.HandLeftPosition, data.HandRightPosition, data.HandLeftState, data.HandRightState);
+                // Passes data recieved from the message to the components to do synchronization
+                playerNetworkController.UpdateHands(
+                    data.HandLeftPosition, data.HandRightPosition,
+                    data.HandLeftState, data.HandRightState
+                );
+                playerNetworkController.UpdatePositionRotation(data.Position, data.Rotation);
             }
         }
 
-        [MessageHandler((ushort)MessageID.SceneChange, 1)]
+        // Handles SceneChange
+        // TODO: replace this with actual level synchronization
+        [MessageHandler((ushort)MessageID.SceneChange, (byte)GroupID.Client)]
         private static void HandleSceneChange_Client(Riptide.Message msg)
         {
             SceneChangeData data = msg.GetSerializable<SceneChangeData>();
@@ -321,6 +424,9 @@ namespace White_Knuckle_Multiplayer.Networking
 
         // INTERNAL (SHARED) LOGIC //
 
+        
+        // Spawns the player, with suffix: _NetworkID
+        // If this is triggered for local player, adds the PlayerNetworkController script
         private void SpawnPlayer_Internal(ushort netID)
         {
             LogManager.Net.Info($"Starting SpawnPlayer on ID {netID}");
@@ -340,13 +446,19 @@ namespace White_Knuckle_Multiplayer.Networking
 
             GameObject go = player;
 
-            if (netID == NetworkClient.Instance.Client.Id && NetworkClient.Instance.Client != null)
+            if (netID == NetworkClient.Instance.Client.Id && NetworkClient.Instance.Client != null && netID != 0)
             {
-                go.AddComponent<PlayerNetworkController>().Initialize(netID);
+                // Player is local, attach the PlayerNetworkController script, so it can properly synchronize to other clients
+                
+                HandsNetworkController leftHandController = go.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory-Root/Left_Hand_Target/Item_Hand_Left/Item_Hands_Left").gameObject.AddComponent<HandsNetworkController>().Initialize(netID);
+                HandsNetworkController rightHandController = go.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory-Root/Right_Hand_Target/Item_Hand_Right/Item_Hands_Right").gameObject.AddComponent<HandsNetworkController>().Initialize(netID);
+                go.AddComponent<PlayerNetworkController>().Initialize(netID, leftHandController, rightHandController);
                 LogManager.Net.Info($"Player not spawned, it's local ; ID {netID}");
             }
-            else
+            else if (netID != 0)
             {
+                // Player is a networked copy, instantiate new copy
+                
                 LogManager.Net.Info($"Player spawned with netID {netID}");
                 go = InstantiatePlayerPrefab(player, netID);
                 go.SetActive(true);
@@ -354,8 +466,10 @@ namespace White_Knuckle_Multiplayer.Networking
             }
         }
 
+        // Handles Despawn of the networked copy
         public void DespawnPlayer(ushort netID)
         {
+            // If the networked copy exists, destroy it
             if (!_players.TryGetValue(netID, out var go)) return;
             Destroy(go);
             _players.Remove(netID);
@@ -363,27 +477,30 @@ namespace White_Knuckle_Multiplayer.Networking
         }
 
         // HELPER FUNCTIONS //
-        // TODO: Make An intermidiate Script containing all these
+        // TODO: Make An intermediate Script containing all these
 
+        // Instantiates the networked copy
         private GameObject InstantiatePlayerPrefab(GameObject player, ushort netID)
         {
             GameObject prefab = Object.Instantiate(player);
             Object.DontDestroyOnLoad(prefab);
-
+            
             DestroyUnwantedComponents(prefab);
 
             prefab.name = $"{playerPrefabName}_{netID}";
             prefab.SetActive(false);
             
-            // Add network controller and initialize with netID
-            prefab.AddComponent<PlayerNetworkController>().Initialize(netID);
+            // Add network controllers and initialize with netID
+            HandsNetworkController leftHandController = prefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory-Root/Left_Hand_Target/Item_Hand_Left/Item_Hands_Left").gameObject.AddComponent<HandsNetworkController>().Initialize(netID);
+            HandsNetworkController rightHandController = prefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory-Root/Right_Hand_Target/Item_Hand_Right/Item_Hands_Right").gameObject.AddComponent<HandsNetworkController>().Initialize(netID);
+            prefab.AddComponent<PlayerNetworkController>().Initialize(netID, leftHandController, rightHandController);
 
             LogManager.Net.Info($"Instantiated Networked Player Prefab for ID {netID}");
 
             return prefab;
         }
 
-        private void DestroyUnwantedComponents(GameObject prefab)
+        private static void DestroyUnwantedComponents(GameObject prefab)
         {
             Object.Destroy(prefab.GetComponent<CharacterController>());
             Object.Destroy(prefab.GetComponent<Inventory>());

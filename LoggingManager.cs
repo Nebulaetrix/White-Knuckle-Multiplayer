@@ -4,18 +4,45 @@ namespace White_Knuckle_Multiplayer
 {
     /// <summary>
     /// Centralized logging with four contexts:
-    /// - Base: plain BepInEx logger
-    /// - Server: prefixes messages with [SERVER]
-    /// - Client: prefixes messages with [CLIENT]
-    /// - Net: prefixes messages with [NET]
-    /// 
-    /// Initialize once in your plugin entrypoint:
-    ///     LogManager.Init(Logger);
+    /// <list type="table">
+    ///     <listheader>
+    ///         <term>Type</term>
+    ///         <description>Description</description>
+    ///     </listheader>
+    ///     <item>
+    ///         <term>Base</term>
+    ///         <description>plain BepInEx logger</description>
+    ///     </item>
+    ///     <item>
+    ///         <term>Server</term>
+    ///         <description>prefixes messages with [SERVER]</description>
+    ///     </item>
+    ///     <item>
+    ///         <term>Client</term>
+    ///         <description>prefixes messages with [CLIENT]</description>
+    ///     </item>
+    ///     <item>
+    ///         <term>Net</term>
+    ///         <description>prefixes messages with [NET]</description>
+    ///     </item>
+    /// </list>
+    ///
+    /// <para>
+    /// Initialize once in plugin entrypoint:
+    ///     <code>LogManager.Init(Logger);</code>
+    /// </para>
+    /// <para>
     /// Then to enable or disable debug logs at runtime:
-    ///     LogManager.DebugEnabled = true;
-    /// Use anywhere:
-    ///     LogManager.Server.Info("Started");
-    ///     LogManager.Client.Debug("Value={0}", value);
+    ///     <code>LogManager.DebugEnabled = true;</code>
+    /// </para>
+    /// <para>
+    /// Then use anywhere like so:
+    ///     <code>
+    ///         LogManager.Server.Info("Started");
+    ///         LogManager.Client.Debug("Value={0}", value);
+    ///     </code>
+    /// </para>
+
     /// </summary>
     public static class LogManager
     {
@@ -24,7 +51,7 @@ namespace White_Knuckle_Multiplayer
         /// <summary>Enable or disable all Debug-level logging.</summary>
         public static bool DebugEnabled { get; set; } = false;
 
-        /// <summary>Initialize the logger. Call in your BepInEx plugin's Awake/OnEnable.</summary>
+        /// <summary>Initialize the logger. Call in BepInEx plugin's Awake/OnEnable.</summary>
         public static void Init(ManualLogSource logger)
         {
             baseLogger = logger;
