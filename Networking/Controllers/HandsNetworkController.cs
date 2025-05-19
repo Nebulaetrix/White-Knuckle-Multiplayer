@@ -24,20 +24,23 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
         private bool hasReceivedFirstUpdate = false;
         private float positionLerpSpeed = 5f;
         private Vector3 targetPosition;
+        private bool isReady;
 
-        public HandsNetworkController Initialize(ushort netID)
+        public void Initialize(ushort netID)
         {
-            NetID = netID;
-            
             // Did Initialize not receive a valid ID? Destroy (Valid ID is: number > 0)
-            if (NetID == 0) Destroy(this);
+            if (netID == 0) Destroy(this);
+            
+            NetID = netID;
+            isReady = true;
+            
+            if (NetID != netID) Destroy(this);
+            
             
             isLocal = NetworkClient.Instance.Client.Id == netID;
-            
-            return this;
         }
         
-        private void OnEnable()
+        private void Awake()
         {
             // The parent of the hand, also changes position
             // propably both hand and its parent need to be manipulated to get exact position
@@ -52,8 +55,9 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
         // Sending is taken care of in PlayerNetworkController.cs
         private void Update()
         {
-            // redundant check
-            if (NetID == 0) Destroy(this);
+            // Wait until NetID is set to a valid ID
+            if (NetID == 0) return;
+            if (!isReady) return;
             
             // shorthand variables for transform data
             Vector3 pos = handParent.transform.position;

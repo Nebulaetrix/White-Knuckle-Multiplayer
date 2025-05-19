@@ -4,6 +4,7 @@ using System.Text;
 using UnityEngine;
 using Riptide;
 using UnityEngine.Rendering.PostProcessing;
+using White_Knuckle_Multiplayer.Managers;
 using White_Knuckle_Multiplayer.Networking.Controllers;
 using Object = UnityEngine.Object;
 
@@ -301,7 +302,7 @@ namespace White_Knuckle_Multiplayer.Networking
             var msg = Riptide.Message.Create(MessageSendMode.Reliable, (ushort)MessageID.SceneChange);
             msg.AddSerializable(data);
             // Host is both server & client
-            if (NetworkServer.Instance.isActive)
+            if (NetworkServer.Instance.IsActive)
                 NetworkServer.Instance.Server.SendToAll(msg);
             else
                 NetworkClient.Instance.Client.Send(msg);
@@ -313,7 +314,7 @@ namespace White_Knuckle_Multiplayer.Networking
             var data = new DespawnPlayerData(netID);
             var msg = Riptide.Message.Create(MessageSendMode.Reliable, (ushort)MessageID.DespawnPlayer);
             msg.AddSerializable(data);
-            if (NetworkServer.Instance.isActive)
+            if (NetworkServer.Instance.IsActive)
                 NetworkServer.Instance.Server.SendToAll(msg, netID);
         }
     }
@@ -462,8 +463,15 @@ namespace White_Knuckle_Multiplayer.Networking
         // If this is triggered for local player, adds the PlayerNetworkController script
         private void SpawnPlayer_Internal(ushort netID)
         {
-            LogManager.Net.Info($"Starting SpawnPlayer on ID {netID}");
+            // If not a valid netID, ignore it
+            if (netID == 0)
+            {
+                LogManager.Net.Warn("SpawnPlayer_Internal called with netID 0; ignoring.");
+                return;
+            }
+            
             if (_players.ContainsKey(netID)) return;
+            LogManager.Net.Info($"Starting SpawnPlayer on ID {netID}");
 
             // Instantiate new player object
             // TODO: Move this to a separate file
@@ -477,26 +485,26 @@ namespace White_Knuckle_Multiplayer.Networking
             }
             LogManager.Net.Info("Player found, attempting to spawn...");
 
-            GameObject go = player;
+            if (netID == NetworkClient.Instance.Client.Id && NetworkClient.Instance.Client != null)
+            {
+                // Player is local, attach the NetworkControllers scripts, so it can properly synchronize to other clients
+                LogManager.Net.Info($"Attaching network controllers to local player {netID}");
+                AttachControllers(player, netID);
+                return;
+            }
 
-            if (netID == NetworkClient.Instance.Client.Id && NetworkClient.Instance.Client != null && netID != 0)
+            // Player is networked(not local), spawn him
+            if (!_players.ContainsKey(netID) && transform.Find($"{playerPrefabName}_{netID}") == null)
             {
-                // Player is local, attach the PlayerNetworkController script, so it can properly synchronize to other clients
-                
-                HandsNetworkController leftHandController = go.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory-Root/Left_Hand_Target/Item_Hand_Left/Item_Hands_Left").gameObject.AddComponent<HandsNetworkController>().Initialize(netID);
-                HandsNetworkController rightHandController = go.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory-Root/Right_Hand_Target/Item_Hand_Right/Item_Hands_Right").gameObject.AddComponent<HandsNetworkController>().Initialize(netID);
-                go.AddComponent<PlayerNetworkController>().Initialize(netID, leftHandController, rightHandController);
-                LogManager.Net.Info($"Player not spawned, it's local ; ID {netID}");
+                LogManager.Net.Info($"Instantiating network clone for ID {netID}");
+                var networkClone = InstantiatePlayerPrefab(player, netID);
+                AttachControllers(networkClone, netID);
+                networkClone.SetActive(true);
+            
+                // Add Networked clone to players
+                _players.Add(netID, networkClone);
             }
-            else if (netID != 0)
-            {
-                // Player is a networked copy, instantiate new copy
-                
-                LogManager.Net.Info($"Player spawned with netID {netID}");
-                go = InstantiatePlayerPrefab(player, netID);
-                go.SetActive(true);
-                _players.Add(netID, go);
-            }
+            
         }
 
         // Handles Despawn of the networked copy
@@ -512,22 +520,34 @@ namespace White_Knuckle_Multiplayer.Networking
         // HELPER FUNCTIONS //
         // TODO: Make An intermediate Script containing all these
 
+        // Function to attach NetworkControllers
+        private static void AttachControllers(GameObject go, ushort netID)
+        {
+            if (go.GetComponent<PlayerNetworkController>() != null)
+            {
+                LogManager.Net.Warn($"NetID {netID} already has Controllers attached");
+                return;
+            }
+            
+            go.AddComponent<PlayerNetworkController>();
+            
+            LogManager.Net.Info($"Controllers attached for ID {netID}");
+        }
+        
         // Instantiates the networked copy
         private GameObject InstantiatePlayerPrefab(GameObject player, ushort netID)
         {
+            LogManager.Net.Info($"Initializing network clone for {netID}");
             GameObject capsule;
-            GameObject prefab = Object.Instantiate(player);
+            var prefab = Object.Instantiate(player);
             Object.DontDestroyOnLoad(prefab);
             
             DestroyUnwantedComponents(prefab);
 
             prefab.name = $"{playerPrefabName}_{netID}";
+            prefab.transform.SetParent(transform.Find("Players").transform);
             prefab.SetActive(false);
             
-            // Add network controllers and initialize with netID
-            HandsNetworkController leftHandController = prefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory-Root/Left_Hand_Target/Item_Hand_Left/Item_Hands_Left").gameObject.AddComponent<HandsNetworkController>().Initialize(netID);
-            HandsNetworkController rightHandController = prefab.transform.Find("Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory-Root/Right_Hand_Target/Item_Hand_Right/Item_Hands_Right").gameObject.AddComponent<HandsNetworkController>().Initialize(netID);
-            prefab.AddComponent<PlayerNetworkController>().Initialize(netID, leftHandController, rightHandController);
             capsule = prefab.transform.Find("Capsule").gameObject;
             capsule.layer = LayerMask.NameToLayer("Player");
             LogManager.Net.Info($"Instantiated Networked Player Prefab for ID {netID}");

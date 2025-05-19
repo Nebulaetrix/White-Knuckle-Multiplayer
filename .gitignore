@@ -9,3 +9,5 @@
 /.vs
 /WKMP.sln.DotSettings.user
 /Folder.DotSettings.user
+
+.env

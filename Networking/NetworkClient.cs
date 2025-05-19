@@ -5,6 +5,7 @@ using UnityEngine;
 using Riptide;
 using Riptide.Utils;
 using Riptide.Transports;
+using White_Knuckle_Multiplayer.Networking.Transports.Steam;
 
 namespace White_Knuckle_Multiplayer.Networking
 {
@@ -47,7 +48,7 @@ namespace White_Knuckle_Multiplayer.Networking
             }
         }
 
-        public void StartClient(string ip = "localhost", ushort port = 7777)
+        public void StartClient(string ip = "localhost", ushort port = 7777, string transport = "udp", bool isHost = false)
         {
             if (Client != null && Client.IsConnected)
             {
@@ -55,7 +56,15 @@ namespace White_Knuckle_Multiplayer.Networking
                 return;
             }
 
-            Client = new Client();
+            if (transport == "udp")
+            {
+                Client = new Client();
+            }
+            else
+            {
+                // Dont Use this, not fully implemented
+                Client = new Client(new SteamClient());
+            }
             Client.Connected += OnConnected;
             Client.Disconnected += OnDisconnected;
             Client.ConnectionFailed += OnConnectionFailed;
@@ -66,8 +75,16 @@ namespace White_Knuckle_Multiplayer.Networking
         private void OnConnected(object sender, EventArgs e)
         {
             LogManager.Client.Info("Client Connected");
-            string username = "Player_" + Client.Id;
-            string version = "0.0.1";
+            string username;
+            try
+            {
+                username = Steamworks.SteamFriends.GetPersonaName();
+            }
+            catch
+            {
+                username = $"Player_{Client.Id}";
+            }
+            string version = MyPluginInfo.PLUGIN_VERSION;
             MessageSender.SendJoinRequest(new JoinRequestData(username, version));
         }
 

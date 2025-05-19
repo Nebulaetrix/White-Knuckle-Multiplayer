@@ -42,7 +42,6 @@ namespace White_Knuckle_Multiplayer
     ///         LogManager.Client.Debug("Value={0}", value);
     ///     </code>
     /// </para>
-
     /// </summary>
     public static class LogManager
     {

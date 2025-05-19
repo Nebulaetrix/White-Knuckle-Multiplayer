@@ -17,6 +17,7 @@ public class GameManager
     private const string PlayerPrefabName = "CL_Player_Network_Prefab";
 
     public GameObject WKNetworkingObject { get; private set; }
+    public GameObject WKNetworking_PlayerHolder { get; private set; }
     public NetworkClient networkClient { get; private set; }
     public NetworkServer networkServer { get; private set; }
     public MessageHandler messageHandler { get; private set; }
@@ -33,6 +34,10 @@ public class GameManager
         // Persistent GameObject holding all networking stuff
         WKNetworkingObject = new GameObject(WKNetworkingObjectName);
         Object.DontDestroyOnLoad(WKNetworkingObject);
+        
+        // Add an Empty GameObject to hold all the network clones in
+        WKNetworking_PlayerHolder = new GameObject("Players");
+        WKNetworking_PlayerHolder.transform.SetParent(WKNetworkingObject.transform);
 
         // Attaching Networked objects to it
         networkClient = WKNetworkingObject.AddComponent<NetworkClient>();

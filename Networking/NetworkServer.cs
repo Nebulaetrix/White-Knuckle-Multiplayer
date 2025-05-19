@@ -4,6 +4,7 @@ using System.Text;
 using UnityEngine;
 using Riptide;
 using Riptide.Utils;
+using White_Knuckle_Multiplayer.Networking.Transports.Steam;
 
 namespace White_Knuckle_Multiplayer.Networking
 {
@@ -12,7 +13,8 @@ namespace White_Knuckle_Multiplayer.Networking
     {
         public static NetworkServer Instance { get; private set; }
         public Server Server { get; private set; }
-        public bool isActive => Server != null && Server.IsRunning;
+        public SteamServer SteamServer { get; private set; }
+        public bool IsActive => Server != null && Server.IsRunning;
 
 
 

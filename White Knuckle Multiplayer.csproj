@@ -1,5 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
+		<!--
+          Default plugin folder; each dev needs to override this
+        -->
+		<DeployDir Condition="'$(DeployDir)' == ''">
+			D:\SteamLibrary\steamapps\common\White Knuckle\BepInEx\plugins\WK_Multiplayer
+		</DeployDir>
+	</PropertyGroup>
+	
+	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<AssemblyName>White_Knuckle_Multiplayer</AssemblyName>
 		<Product>White Knuckle Multiplayer</Product>
@@ -12,6 +21,10 @@
 			https://nuget.samboy.dev/v3/index.json
 		</RestoreAdditionalProjectSources>
 		<RootNamespace>White_Knuckle_Multiplayer</RootNamespace>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+	  <DocumentationFile>docs\White Knuckle Multiplayer.xml</DocumentationFile>
+	  <NoWarn>1701;1702;CS1591;CS1574</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
 	  <None Remove=".gitignore" />
@@ -75,4 +88,12 @@
 	<ItemGroup>
 	  <EmbeddedResource Remove="GameScripts\**" />
 	</ItemGroup>
+
+	<Target Name="PostBuildCopyMod" AfterTargets="Build">
+		<Message Text="Copying $(AssemblyName).dll → $(DeployDir)" Importance="high" />
+		<Copy
+				SourceFiles="$(TargetDir)$(AssemblyName).dll"
+				DestinationFolder="$(DeployDir)"
+				SkipUnchangedFiles="true" />
+	</Target>
 </Project>
