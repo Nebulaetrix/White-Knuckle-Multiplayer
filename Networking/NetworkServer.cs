@@ -4,6 +4,7 @@ using System.Text;
 using UnityEngine;
 using Riptide;
 using Riptide.Utils;
+using White_Knuckle_Multiplayer.Networking.Routing;
 using White_Knuckle_Multiplayer.Networking.Transports.Steam;
 
 namespace White_Knuckle_Multiplayer.Networking
@@ -27,6 +28,7 @@ namespace White_Knuckle_Multiplayer.Networking
                 return;
             }    
             Instance = this;
+            // SteamServer = new SteamServer();
             
             // Setting up Riptide Logger
             RiptideLogger.Initialize(LogManager.Server.Debug, LogManager.Server.Info, LogManager.Server.Warn, LogManager.Server.Error, false);
@@ -34,25 +36,51 @@ namespace White_Knuckle_Multiplayer.Networking
 
         private void FixedUpdate()
         {
-            if (Server != null)
+            if (Server != null && Server.IsRunning)
             {
                 Server.Update();
             }
         }
 
-        public void StartServer(ushort port = 7777, ushort maxClientCount = 10)
+        private void Start()
         {
-            if (Server != null) {
+            if (!SteamManager.initialized)
+            {
+                LogManager.Server.Error("Steam is not initialized");
+                return;
+            }
+            
+            SteamServer = new SteamServer();
+            Server = new Server(SteamServer);
+        }
+
+        public void StartServer(ushort port = 7777, ushort maxClientCount = 10, string transport = "udp")
+        {
+            if (Server != null && Server.IsRunning) {
                 LogManager.Server.Warn("Server is already running");
                 return;
             }
 
-            Server = new Server();
+            if (transport == "steam")
+            {
+                Server = new Server(SteamServer);
+            }
+            else
+            {
+                Server = new Server();
+            }
+
+            Server.MessageReceived += OnServerMessageReceived;
             Server.ClientConnected += OnClientConnected;
             Server.ClientDisconnected += OnClientDisconnected;
-            Server.Start(port, maxClientCount, messageHandlerGroupId: (byte)GroupID.Server, useMessageHandlers: true);
+            Server.Start(port, maxClientCount, messageHandlerGroupId: (byte)GroupID.Server, useMessageHandlers: false);
 
             LogManager.Server.Info($"Server Started on port {port}");
+        }
+
+        public void StartSteamServer()
+        {
+            StartServer(7777, 10, "steam");
         }
 
         public void StopServer()
@@ -74,6 +102,22 @@ namespace White_Knuckle_Multiplayer.Networking
         {
             LogManager.Server.Info($"Client {e.Client.Id} disconnected");
             MessageSender.SendDespawn(e.Client.Id);
+        }
+        
+        private void OnServerMessageReceived(object sender, MessageReceivedEventArgs e)
+        {
+            var messageID = e.MessageId;
+            var fromClientID = e.FromConnection.Id;
+            var msg = e.Message;
+            
+            MessageRouter.Route(messageID, (byte)GroupID.Server, fromClientID, msg);
+        }
+
+        private void OnDisable()
+        {
+            Server.MessageReceived -= OnServerMessageReceived;
+            Server.ClientConnected -= OnClientConnected;
+            Server.ClientDisconnected -= OnClientDisconnected;
         }
     }
 }

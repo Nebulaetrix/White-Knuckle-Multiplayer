@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using Riptide;
 using Riptide.Utils;
-using Riptide.Transports;
+using White_Knuckle_Multiplayer.Networking.Messages;
+using White_Knuckle_Multiplayer.Networking.Routing;
 using White_Knuckle_Multiplayer.Networking.Transports.Steam;
+using White_Knuckle_Multiplayer.Utils;
 
 namespace White_Knuckle_Multiplayer.Networking
 {
@@ -14,6 +14,7 @@ namespace White_Knuckle_Multiplayer.Networking
     {
         public static NetworkClient Instance { get; private set; }
         public Client Client { get; private set; }
+        public SteamClient SteamClient { get; private set; }
 
         [SerializeField] public string connectionAddress = "localhost";
         [SerializeField] public ushort connectionPort = 7777;
@@ -30,6 +31,12 @@ namespace White_Knuckle_Multiplayer.Networking
 
             // Setting up Riptide Logger
             RiptideLogger.Initialize(LogManager.Client.Debug, LogManager.Client.Info, LogManager.Client.Warn, LogManager.Client.Error, false);
+        }
+
+        private void Start()
+        {
+            SteamClient = new SteamClient();
+            Client = new Client(SteamClient);
         }
         
         private void Update()
@@ -56,22 +63,48 @@ namespace White_Knuckle_Multiplayer.Networking
                 return;
             }
 
-            if (transport == "udp")
+            if (transport.ToLower() == "steam")
             {
-                Client = new Client();
+                // IMPLEMENTED HORAAAAYYYY
+                if (isHost)
+                {
+                    Client = new Client(new SteamClient(NetworkServer.Instance.SteamServer));
+                }
+                else
+                {
+                    // NetworkServer.Instance.StartSteamServer();
+                    var steamClient = new SteamClient(NetworkServer.Instance.SteamServer);
+                    
+                    Client = new Client(steamClient);
+                }
             }
             else
             {
-                // Dont Use this, not fully implemented
-                Client = new Client(new SteamClient());
+                // Local LAN hosting, or fallback
+                Client = new Client();
             }
+
+            Client.MessageReceived += OnClientMessageReceived;
             Client.Connected += OnConnected;
             Client.Disconnected += OnDisconnected;
             Client.ConnectionFailed += OnConnectionFailed;
-            Client.Connect($"{ip}:{port}", maxConnectionAttempts: 5, messageHandlerGroupId: (byte)GroupID.Client, message: null, useMessageHandlers: true);
+            string connectString;
+            if (transport == "steam")
+                connectString = $"{ip}";
+            else
+                connectString = $"{ip}:{port}";
+            
+            Client.Connect(connectString, maxConnectionAttempts: 5, messageHandlerGroupId: (byte)GroupID.Client, useMessageHandlers: false);
         }
 
-
+        public void Disconnect()
+        {
+            if (Client != null && Client.IsConnected)
+            {
+                Client.Disconnect();
+            }
+        }
+        
         private void OnConnected(object sender, EventArgs e)
         {
             LogManager.Client.Info("Client Connected");
@@ -84,18 +117,43 @@ namespace White_Knuckle_Multiplayer.Networking
             {
                 username = $"Player_{Client.Id}";
             }
-            string version = MyPluginInfo.PLUGIN_VERSION;
-            MessageSender.SendJoinRequest(new JoinRequestData(username, version));
+
+            // Send Join request to server
+            // TODO: Replace with lobbies
+            var modList = ModListHelper.GetLoadedModsList();
+            MessageSender.SendJoinRequest(new JoinRequestData(username, MyPluginInfo.PLUGIN_VERSION, modList));
         }
 
         private void OnConnectionFailed(object sender, EventArgs e)
         {
-            LogManager.Client.Error("Client Failed to Connect");
+            LogManager.Client.Error($"Client Failed to Connect");
         }
 
         private void OnDisconnected(object sender, EventArgs e)
         {
             LogManager.Client.Info("Client Disconnected");
+
+            foreach (ushort netID in MessageHandler.Instance._players.Keys)
+            {
+                MessageHandler.Instance.DespawnPlayer(netID);
+            }
+        }
+
+        private void OnClientMessageReceived(object sender, MessageReceivedEventArgs e)
+        {
+            var messageID = e.MessageId;
+            var fromClientID = e.FromConnection.Id;
+            var msg = e.Message;
+            
+            MessageRouter.Route(messageID, (byte)GroupID.Client, fromClientID, msg);
+        }
+
+        private void OnDisable()
+        {
+            Client.MessageReceived -= OnClientMessageReceived;
+            Client.Connected -= OnConnected;
+            Client.Disconnected -= OnDisconnected;
+            Client.ConnectionFailed -= OnConnectionFailed;
         }
     }
 }

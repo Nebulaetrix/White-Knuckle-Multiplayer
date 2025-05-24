@@ -43,6 +43,9 @@ public class GameManager
         networkClient = WKNetworkingObject.AddComponent<NetworkClient>();
         networkServer = WKNetworkingObject.AddComponent<NetworkServer>();
         messageHandler = WKNetworkingObject.AddComponent<MessageHandler>();
+        
+        // Adding this via SteamManager manually after Init
+        //WKNetworkingObject.AddComponent<LobbyManager>();
 
         SpriteCache.Preload(
             "Hands_idle",
@@ -84,6 +87,28 @@ public class GameManager
         }
     }
 
+    public void StartSteamHost()
+    {
+        ushort maxClients = 10;
+        ushort port = 7777;
+        string address = "127.0.0.1";
+        
+        InitializeWKNetworking();
+
+        try
+        {
+            LogManager.Info($"Starting steam host on port {port}...");
+            networkServer.StartServer(port, maxClients, "steam");
+
+            LogManager.Info($"Connecting local client to {address}:{port}...");
+            networkClient.StartClient(address, port, "steam", true);
+        }
+        catch (Exception ex)
+        {
+            LogManager.Error($"Failed to start steam host: {ex.Message}");
+        }
+    }
+
     /// <summary>
     /// Connects as a client to an existing host.
     /// </summary>
@@ -95,6 +120,21 @@ public class GameManager
         {
             LogManager.Info($"Connecting to server at {serverAddress}:{serverPort}...");
             networkClient.StartClient(serverAddress, serverPort);
+        }
+        catch (Exception ex)
+        {
+            LogManager.Error($"Failed to start client: {ex}");
+        }
+    }
+    
+    public void StartSteamClient(string serverAddress = "127.0.0.1", ushort serverPort = 7777)
+    {
+        InitializeWKNetworking();
+
+        try
+        {
+            LogManager.Info($"Connecting to steam WKNetworking server at {serverAddress}...");
+            networkClient.StartClient(serverAddress, serverPort, "steam");
         }
         catch (Exception ex)
         {

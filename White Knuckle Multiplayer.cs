@@ -1,8 +1,12 @@
-﻿using BepInEx;
+﻿using System.Collections.Generic;
+using System.Linq;
+using BepInEx;
 using BepInEx.Logging;
+using HarmonyLib;
 using UnityEngine.SceneManagement;
 using White_Knuckle_Multiplayer.Managers;
 using White_Knuckle_Multiplayer.Networking;
+using White_Knuckle_Multiplayer.Utils;
 
 namespace White_Knuckle_Multiplayer;
 
@@ -21,11 +25,14 @@ public class WkMultiplayer : BaseUnityPlugin
 
         GameManager = new GameManager();
 
+        var harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
+        harmony.PatchAll();
+
         SceneManager.sceneLoaded += OnSceneLoad;
 
         LogManager.Info($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
     }
-
+    
     private void OnSceneLoad(Scene scene, LoadSceneMode mode)
     {
         // ADDED CASE FOR "Intro" SCENE
@@ -72,6 +79,11 @@ public class WkMultiplayer : BaseUnityPlugin
         CommandConsole.AddCommand("host", commandManager.HandleLocalHostCommand, false);
         CommandConsole.AddCommand("join", commandManager.HandleLocalJoinCommand, false);
         CommandConsole.AddCommand("disconnect", commandManager.HandleDisconnectCommand, false);
+        CommandConsole.AddCommand("steamhost", commandManager.HandleSteamHostCommand, false);
+        CommandConsole.AddCommand("steamjoin", commandManager.HandleSteamJoinCommand, false);
+        CommandConsole.AddCommand("lobbycreate", commandManager.HandleSteamLobbyCreate, false);
+        CommandConsole.AddCommand("lobbyjoin", commandManager.HandleSteamLobbyJoin, false);
+        CommandConsole.AddCommand("lobbyleave", commandManager.HandleSteamLobbyLeave, false);
         
         LogManager.Info("Commands registered successfully");
     }

@@ -86,7 +86,7 @@ public class SteamClient : SteamPeer, IClient
 
     private SteamConnection ConnectLocal()
     {
-        Debug.Log($"{LogName}: Connecting to locally running server...");
+        LogManager.SteamClient.Debug($"{LogName}: Connecting to locally running server...");
 
         connectionStatusChanged = Callback<SteamNetConnectionStatusChangedCallback_t>.Create(OnConnectionStatusChanged);
         CSteamID playerSteamId = SteamUser.GetSteamID();
@@ -164,7 +164,7 @@ public class SteamClient : SteamPeer, IClient
                 break;
 
             default:
-                Debug.Log($"{LogName}: Connection state changed - {callback.m_info.m_eState} | {callback.m_info.m_szEndDebug}");
+                LogManager.SteamClient.Debug($"{LogName}: Connection state changed - {callback.m_info.m_eState} | {callback.m_info.m_szEndDebug}");
                 break;
         }
     }

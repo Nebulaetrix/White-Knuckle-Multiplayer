@@ -104,5 +104,31 @@ namespace White_Knuckle_Multiplayer
             public static void Warn(string message) => baseLogger?.LogWarning($"[NET] {message}");
             public static void Error(string message) => baseLogger?.LogError($"[NET] {message}");
         }
+        
+        /// <summary>Steam Client-context logging.</summary>
+        public static class SteamClient
+        {
+            public static void Info(string message) => baseLogger?.LogInfo($"[STEAM CLIENT] {message}");
+            public static void Debug(string message)
+            {
+                if (DebugEnabled)
+                    baseLogger?.LogDebug($"[STEAM CLIENT] {message}");
+            }
+            public static void Warn(string message) => baseLogger?.LogWarning($"[STEAM CLIENT] {message}");
+            public static void Error(string message) => baseLogger?.LogError($"[STEAM CLIENT] {message}");
+        }
+        
+        /// <summary>Steam Server-context logging.</summary>
+        public static class SteamServer
+        {
+            public static void Info(string message) => baseLogger?.LogInfo($"[STEAM SERVER] {message}");
+            public static void Debug(string message)
+            {
+                if (DebugEnabled)
+                    baseLogger?.LogDebug($"[STEAM SERVER] {message}");
+            }
+            public static void Warn(string message) => baseLogger?.LogWarning($"[STEAM SERVER] {message}");
+            public static void Error(string message) => baseLogger?.LogError($"[STEAM SERVER] {message}");
+        }
     }
 }
