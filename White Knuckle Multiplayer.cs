@@ -22,7 +22,11 @@ public class WkMultiplayer : BaseUnityPlugin
     private void Awake()
     {
         LogManager.Init(base.Logger);
-
+        
+        if (!AssetBundleLoader.InitializeAndLoadAssets())
+        {
+            LogManager.Error($"{MyPluginInfo.PLUGIN_GUID} failed to load critical assets from bundle. CL_Player prefab will be null.");
+        }
         GameManager = new GameManager();
 
         var harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
@@ -52,7 +56,6 @@ public class WkMultiplayer : BaseUnityPlugin
                     var coroutineObject = new UnityEngine.GameObject("CoroutineRunner");
                     UnityEngine.Object.DontDestroyOnLoad(coroutineObject);
                     coroutineRunner = coroutineObject.AddComponent<CoroutineRunner>();
-                    // LogManager.Info("Created CoroutineRunner"); // Original comment
                 }
                     
                 commandManager = new CommandManager(GameManager, coroutineRunner, coroutineRunner);
