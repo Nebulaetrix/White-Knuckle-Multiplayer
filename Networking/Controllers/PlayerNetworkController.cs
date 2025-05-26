@@ -163,8 +163,7 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
                 Color handRightColor = HandRightController.handColor; 
                 string localLeftItemName = NO_ITEM_PREFAB_NAME;
                 string localRightItemName = NO_ITEM_PREFAB_NAME;
-
-                // Using your actual game classes
+                
                 if (_localPlayer == null) _localPlayer = ENT_Player.GetPlayer(); 
                 if (_localInventory == null && _localPlayer != null) _localInventory = Inventory.instance; 
 
