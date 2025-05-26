@@ -49,6 +49,7 @@ public partial class MessageHandler
                 data.HandLeftPosition, data.HandRightPosition,
                 data.HandLeftState, data.HandRightState, data.HandLeftColor, data.HandRightColor
             );
+            playerNetworkController.UpdateHandItems(data.LeftHandItemPrefabName, data.RightHandItemPrefabName);
             playerNetworkController.UpdatePositionRotation(data.Position, data.Rotation);
         }
     }

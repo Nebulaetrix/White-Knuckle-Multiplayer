@@ -5,6 +5,7 @@ using UnityEngine.Rendering.PostProcessing;
 using Object = UnityEngine.Object;
 using White_Knuckle_Multiplayer.Networking.Controllers;
 using White_Knuckle_Multiplayer.Networking.Messages;
+using White_Knuckle_Multiplayer.Utils;
 
 namespace White_Knuckle_Multiplayer.Networking
 {
@@ -136,7 +137,7 @@ namespace White_Knuckle_Multiplayer.Networking
             if (!_players.ContainsKey(netID) && transform.Find($"{playerPrefabName}_{netID}") == null)
             {
                 LogManager.Net.Info($"Instantiating network clone for ID {netID}");
-                var networkClone = InstantiatePlayerPrefab(player, netID);
+                var networkClone = InstantiatePlayerPrefab(netID);
                 AttachControllers(networkClone, netID);
                 networkClone.SetActive(true);
             
@@ -174,73 +175,17 @@ namespace White_Knuckle_Multiplayer.Networking
         }
         
         // Instantiates the networked copy
-        private GameObject InstantiatePlayerPrefab(GameObject player, ushort netID)
+        private GameObject InstantiatePlayerPrefab(ushort netID)
         {
             LogManager.Net.Info($"Initializing network clone for {netID}");
-            GameObject capsule;
-            var prefab = Object.Instantiate(player);
-            Object.DontDestroyOnLoad(prefab);
-            
-            DestroyUnwantedComponents(prefab);
-
+            GameObject prefabFromBundle = AssetBundleLoader.CL_Player_Prefab;
+            var prefab = Object.Instantiate(prefabFromBundle);
             prefab.name = $"{playerPrefabName}_{netID}";
             prefab.transform.SetParent(transform.Find("Players").transform);
             prefab.SetActive(false);
-            
-            capsule = prefab.transform.Find("Capsule").gameObject;
-            capsule.layer = LayerMask.NameToLayer("Player");
             LogManager.Net.Info($"Instantiated Networked Player Prefab for ID {netID}");
 
             return prefab;
-        }
-
-        private static void DestroyUnwantedComponents(GameObject prefab)
-        {
-            // Object.Destroy(prefab.GetComponent<CharacterController>());
-            Object.Destroy(prefab.GetComponent<Inventory>());
-            Object.Destroy(prefab.GetComponent<MonoBehaviour>());
-
-            var unwantedCameraComponents = new[]
-            {
-            "Main Cam Root", "Main Cam Root/Main Camera Shake Root/Main Camera",
-            "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera"
-        };
-            foreach (var path in unwantedCameraComponents)
-            {
-                var camObject = prefab.transform.Find(path);
-                if (camObject != null)
-                {
-                    Object.Destroy(camObject.GetComponent<CRTEffect>());
-                    Object.Destroy(camObject.GetComponent<PostProcessVolume>());
-                    Object.Destroy(camObject.GetComponent<PostProcessLayer>());
-                    Object.Destroy(camObject.GetComponent<Camera>());
-                    Object.Destroy(camObject.GetComponent<FX_CameraShaderController>());
-                }
-            }
-
-            var unwantedGameObjects = new[]
-            {
-                "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory",
-                "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/InventoryBagCamera",
-                "Main Cam Target", "Particle System", "Wind Sound", "Fatigue Sound",
-                "Main Cam Target", "Particle System", "Wind Sound", "Fatigue Sound",
-                "CorruptionSurround", "Aim Circle", "Fake Handholds", "FXCam", "EffectRoot", "Death Sound"
-            };
-
-            foreach (var path in unwantedGameObjects)
-            {
-                var unwantedObject = prefab.transform.Find(path);
-                if (unwantedObject != null) Object.Destroy(unwantedObject.gameObject);
-            }
-
-            Destroy(prefab.transform
-                .Find(
-                    "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory-Root/Right_Hand_Target/Item_Hand_Right")
-                .GetComponent<ViewSway>());
-            Destroy(prefab.transform
-                .Find(
-                    "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory-Root/Left_Hand_Target/Item_Hand_Left")
-                .GetComponent<ViewSway>());
         }
     }
 }

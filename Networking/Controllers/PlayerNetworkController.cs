@@ -24,6 +24,17 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
         private HandsNetworkController HandRightController;
         private HandsNetworkController HandLeftController;
         private bool isLocal = false;
+        
+        private string currentLeftItemPrefabName = NO_ITEM_PREFAB_NAME; 
+        private GameObject currentLeftItemInstance;
+        private string currentRightItemPrefabName = NO_ITEM_PREFAB_NAME; 
+        private GameObject currentRightItemInstance;
+        private Transform leftHandItemParentTransform; 
+        private Transform rightHandItemParentTransform;
+        // 
+        private const string NO_ITEM_PREFAB_NAME = "None"; 
+        private ENT_Player _localPlayer; 
+        private Inventory _localInventory;
 
         private void OnEnable()
         {
@@ -69,6 +80,19 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
                     "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory-Root/Right_Hand_Target/Item_Hand_Right/Item_Hands_Right")
                 .gameObject;
             
+              // this is the parent of the instantiated item
+              var leftItemParentGameObject  = transform
+                  .Find(
+                      "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory-Root/Left_Hand_Target/Item_Hand_Left")
+                  .gameObject;
+              var rightItemParentGameObject = transform
+                  .Find(
+                      "Main Cam Root/Main Camera Shake Root/Main Camera/Inventory Camera/Inventory-Root/Right_Hand_Target/Item_Hand_Right")
+                  .gameObject;
+                  
+              leftHandItemParentTransform = leftItemParentGameObject.transform;
+              rightHandItemParentTransform = rightItemParentGameObject.transform;
+
             if (leftHand == null || rightHand == null)
             {
                 LogManager.Net.Warn("Couldn't find hand transforms when attaching controllers.");
@@ -86,6 +110,14 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
             
             HandLeftController.Initialize(netID);
             HandRightController.Initialize(netID);
+        }
+        private void OnDisable() 
+        {
+            if (!isLocal)
+            {
+                if (currentLeftItemInstance != null) Destroy(currentLeftItemInstance);
+                if (currentRightItemInstance != null) Destroy(currentRightItemInstance);
+            }
         }
 
         // !!! RUNS FOR BOTH NETWORKED AND LOCAL PLAYER !!!
@@ -129,10 +161,26 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
                 String handRightState = HandRightController.handState;
                 Color handLeftColor = HandLeftController.handColor;   
                 Color handRightColor = HandRightController.handColor; 
+                string localLeftItemName = NO_ITEM_PREFAB_NAME;
+                string localRightItemName = NO_ITEM_PREFAB_NAME;
+
+                // Using your actual game classes
+                if (_localPlayer == null) _localPlayer = ENT_Player.GetPlayer(); 
+                if (_localInventory == null && _localPlayer != null) _localInventory = Inventory.instance; 
+
+                if (_localPlayer != null && _localInventory != null && _localPlayer.hands != null) {
+                    if (_localPlayer.hands.Length > 0 && _localPlayer.hands[0]?.inventoryHand?.currentItem != null) 
+                        localLeftItemName = _localPlayer.hands[0].inventoryHand.currentItem.prefabName ?? NO_ITEM_PREFAB_NAME;
+                    
+                    if (_localPlayer.hands.Length > 1 && _localPlayer.hands[1]?.inventoryHand?.currentItem != null)
+                        localRightItemName = _localPlayer.hands[1].inventoryHand.currentItem.prefabName ?? NO_ITEM_PREFAB_NAME;
+                }
+
                 MessageSender.SendPlayerData(new PlayerData(
-                        NetID,pos, rot, handLeftPos, handRightPos, handLeftState, handRightState, handLeftColor, handRightColor 
-                    )
-                );
+                    NetID, pos, rot, handLeftPos, handRightPos, handLeftState, handRightState, handLeftColor,
+                    handRightColor,
+                    localLeftItemName, localRightItemName
+                ));
             }
         }
         
@@ -180,6 +228,76 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
                 {
                     LogManager.Client.Error($"UpdateHands Error: {e.Message}");
                     handsErrored = true;
+                }
+            }
+        }
+          public void UpdateHandItems(string newLeftItemPrefab, string newRightItemPrefab)
+          
+        {
+            if (isLocal) return; 
+
+            
+            if (leftHandItemParentTransform == null || rightHandItemParentTransform == null)
+            {
+                LogManager.Net.Warn($"UpdateHandItems (Remote ID {NetID}): Item parent Transforms not initialized. Cannot update items.");
+                return;
+            }
+            
+            newLeftItemPrefab = newLeftItemPrefab ?? NO_ITEM_PREFAB_NAME; 
+            newRightItemPrefab = newRightItemPrefab ?? NO_ITEM_PREFAB_NAME;
+
+            if (newLeftItemPrefab != currentLeftItemPrefabName) {
+                if (currentLeftItemInstance != null) Destroy(currentLeftItemInstance);
+                currentLeftItemInstance = null; 
+                currentLeftItemPrefabName = newLeftItemPrefab;
+                // If the item is not the default "None" item, instantiate it
+                if (currentLeftItemPrefabName != NO_ITEM_PREFAB_NAME) {
+                    // Get the prefab asset from the asset manager
+                    GameObject prefabAsset = CL_AssetManager.GetAssetGameObject(currentLeftItemPrefabName); 
+                    if (prefabAsset != null) {
+                        // Instantiate the item prefab at the left hand parent transform
+                        currentLeftItemInstance = Instantiate(prefabAsset, leftHandItemParentTransform); // Parent to the Transform
+                        currentLeftItemInstance.transform.localPosition = Vector3.zero; 
+                        currentLeftItemInstance.transform.localRotation = Quaternion.identity;
+                        currentLeftItemInstance.transform.localScale = Vector3.one; 
+                        // get rigidbody component of item prefab we just instantiated
+                        Rigidbody rb = currentLeftItemInstance.GetComponent<Rigidbody>();
+                        if (rb != null)
+                        {
+                            // disable gravity so that it looks decent
+                            rb.useGravity = false; 
+                            rb.isKinematic = true; // disable physics
+                        }
+                    } else {
+                        LogManager.Net.Warn($"PNC (Remote ID {NetID}): CL_AssetManager returned null for left item '{currentLeftItemPrefabName}'");
+                    }
+                }
+            }
+            if (newRightItemPrefab != currentRightItemPrefabName) {
+                if (currentRightItemInstance != null) Destroy(currentRightItemInstance);
+                currentRightItemInstance = null;
+                currentRightItemPrefabName = newRightItemPrefab;
+                // If the item is not the default "None" item, instantiate it
+                if (currentRightItemPrefabName != NO_ITEM_PREFAB_NAME) {
+                    // Get the prefab asset from the asset manager
+                    GameObject prefabAsset = CL_AssetManager.GetAssetGameObject(currentRightItemPrefabName); 
+                    if (prefabAsset != null) {
+                        // Instantiate the item prefab at the right hand parent transform
+                        currentRightItemInstance = Instantiate(prefabAsset, rightHandItemParentTransform); // Parent to the Transform
+                        currentRightItemInstance.transform.localPosition = Vector3.zero;
+                        currentRightItemInstance.transform.localRotation = Quaternion.identity;
+                        currentRightItemInstance.transform.localScale = Vector3.one;
+                        // get rigidbody component of item prefab we just instantiated
+                        Rigidbody rb = currentRightItemInstance.GetComponent<Rigidbody>();
+                        if (rb != null)
+                        {
+                            // disable gravity so that it does not fall
+                            rb.useGravity = false;
+                            rb.isKinematic = true; // disable physics so it does not float around when rotating or moving
+                        }
+                    } else {
+                         LogManager.Net.Warn($"PNC (Remote ID {NetID}): CL_AssetManager returned null for right item '{currentRightItemPrefabName}'");
+                    }
                 }
             }
         }

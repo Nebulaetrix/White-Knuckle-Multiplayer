@@ -83,7 +83,6 @@ namespace White_Knuckle_Multiplayer.Networking.Controllers
                 handColor = spriteRenderer.color; 
             }
         }
-
         
         /// <summary>
         /// Updates the position for a networked hand

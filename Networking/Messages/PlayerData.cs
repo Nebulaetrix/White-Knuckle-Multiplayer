@@ -18,9 +18,11 @@ namespace White_Knuckle_Multiplayer.Networking.Messages;
         public string HandRightState;
         public Color HandLeftColor;  
         public Color HandRightColor; 
+        public string LeftHandItemPrefabName;
+        public string RightHandItemPrefabName; 
 
         public PlayerData(ushort playerID, Vector3 position, Quaternion rotation,
-            Vector3 handLeftPosition, Vector3 handRightPosition, string handLeftState, string handRightState, Color handLeftColor, Color handRightColor)
+            Vector3 handLeftPosition, Vector3 handRightPosition, string handLeftState, string handRightState, Color handLeftColor, Color handRightColor, string leftHandItemPrefabName, string rightHandItemPrefabName)
         {
             NetID = playerID;
             Position = position;
@@ -31,6 +33,8 @@ namespace White_Knuckle_Multiplayer.Networking.Messages;
             HandRightState = handRightState;
             HandLeftColor = handLeftColor;
             HandRightColor = handRightColor;
+            LeftHandItemPrefabName = leftHandItemPrefabName;
+            RightHandItemPrefabName = rightHandItemPrefabName;
             
         }
 
@@ -56,12 +60,13 @@ namespace White_Knuckle_Multiplayer.Networking.Messages;
             message.AddString(HandLeftState);
             message.AddString(HandRightState);
                         
-            // Vector4, Left Hand Color
+            // Hand Color - Vector4
             message.AddColor(HandLeftColor);
-
-            
-            // Vector4, Right Hand Color
             message.AddColor(HandRightColor);
+            
+            // Item Prefab Names - String
+            message.AddString(LeftHandItemPrefabName);
+            message.AddString(RightHandItemPrefabName);
         }
 
         // Reconstruct the message from basic types to advanced ones
@@ -92,5 +97,9 @@ namespace White_Knuckle_Multiplayer.Networking.Messages;
 
             // Hand Color - Vector4
             HandRightColor = message.GetColor();
+            
+            // Item Prefab Names - String
+            LeftHandItemPrefabName = message.GetString();
+            RightHandItemPrefabName = message.GetString();
         }
     }
