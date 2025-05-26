@@ -4,7 +4,7 @@
           Default plugin folder; each dev needs to override this
         -->
 		<DeployDir Condition="'$(DeployDir)' == ''">
-			D:\SteamLibrary\steamapps\common\White Knuckle\BepInEx\plugins\WK_Multiplayer
+			C:\Program Files (x86)\Steam\steamapps\common\White Knuckle\BepInEx\plugins
 		</DeployDir>
 	</PropertyGroup>
 	
@@ -46,6 +46,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Reference Include="ALINE">
+		  <HintPath>deps\ALINE.dll</HintPath>
+		</Reference>
 		<Reference Include="Assembly-CSharp">
 			<HintPath>deps\Assembly-CSharp.dll</HintPath>
 		</Reference>
