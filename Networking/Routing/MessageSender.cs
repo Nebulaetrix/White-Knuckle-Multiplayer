@@ -42,16 +42,16 @@ namespace White_Knuckle_Multiplayer.Networking.Routing;
 
         // Sending Scene Change
         // TODO: Replace this with actual level synchronization
-        public static void SendSceneChange(string sceneName)
+        public static void SendLevelData(string[] sceneName)
         {
-            var data = new SceneChangeData(sceneName);
+            /*var data = new SceneChangeData(sceneName);
             var msg = Riptide.Message.Create(MessageSendMode.Reliable, (ushort)MessageID.SceneChange);
             msg.AddSerializable(data);
             // Host is both server & client
             if (NetworkServer.Instance.IsActive)
                 NetworkServer.Instance.Server.SendToAll(msg);
             else
-                NetworkClient.Instance.Client.Send(msg);
+                NetworkClient.Instance.Client.Send(msg);*/
         }
 
         // Sending DespawnPlayer to all connected clients

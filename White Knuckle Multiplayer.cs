@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using White_Knuckle_Multiplayer.Managers;
 using White_Knuckle_Multiplayer.Networking;
 using White_Knuckle_Multiplayer.Utils;
@@ -18,12 +21,13 @@ public class WkMultiplayer : BaseUnityPlugin
     public static GameManager GameManager;
     private CommandManager commandManager;
     private CoroutineRunner coroutineRunner;
+    private Scene _lobby;
 
     private void Awake()
     {
         LogManager.Init(base.Logger);
         
-        if (!AssetBundleLoader.InitializeAndLoadAssets())
+        if (!AssetBundleLoader.Load())
         {
             LogManager.Error($"{MyPluginInfo.PLUGIN_GUID} failed to load critical assets from bundle. CL_Player prefab will be null.");
         }
@@ -33,19 +37,13 @@ public class WkMultiplayer : BaseUnityPlugin
         harmony.PatchAll();
 
         SceneManager.sceneLoaded += OnSceneLoad;
-
+        
         LogManager.Info($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
     }
     
+    
     private void OnSceneLoad(Scene scene, LoadSceneMode mode)
     {
-        // ADDED CASE FOR "Intro" SCENE
-        if (scene.name == "Intro")
-        {
-            SceneManager.LoadScene("Main-Menu");
-            return; 
-        }
-
         switch (loaded)
         {
             case false when scene.name == "Game-Main":
@@ -67,6 +65,38 @@ public class WkMultiplayer : BaseUnityPlugin
             case true when scene.name == "Game-Main":
                 AddCommands();
                 break;
+        }
+
+        if (scene.name == "Main-Menu")
+        {
+            var menuButtons = GameObject.Find("Canvas/Main Menu/Main Menu Buttons");
+            if (menuButtons == null)
+            {
+               LogManager.Error("Failed to find 'Main Menu Buttons'");
+               return;
+            }
+
+            var screens = GameObject.Find("Screens");
+            if (screens == null)
+            {
+               LogManager.Error("Failed to find 'Screens'");
+               return;
+            }
+
+
+            menuButtons.transform.Find("Image").gameObject.SetActive(false);
+            var mpButton = Instantiate(AssetBundleLoader.LobbyButton, menuButtons.transform);
+            mpButton.transform.SetSiblingIndex(3);
+
+            var lobbyPane = Instantiate(AssetBundleLoader.LobbyScreen, screens.transform);
+            lobbyPane.AddComponent<UiManager>();
+            
+            mpButton.GetComponent<Button>().onClick.AddListener(() =>
+            { 
+                lobbyPane.GetComponent<UI_LerpOpen>().Show();
+            });
+            
+            
         }
     }
 

@@ -1,56 +1,54 @@
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace White_Knuckle_Multiplayer.Utils
+namespace White_Knuckle_Multiplayer.Utils;
+
+public class AssetBundleLoader
 {
-  public static class AssetBundleLoader
-  {
-    private static AssetBundle _mainAssetBundle;
-    private static GameObject _clPlayerPrefabInternal;
+    private static AssetBundle _assets;
+    internal static GameObject PlayerPrefab;
+    internal static GameObject LobbyScreen;
+    internal static GameObject LobbyButton;
 
-    public static GameObject CL_Player_Prefab => AssetBundleLoader._clPlayerPrefabInternal;
-
-    public static bool InitializeAndLoadAssets()
+    
+    internal static bool Load()
     {
-      AssetBundleLoader._mainAssetBundle = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "playerprefab"));
-      if ((Object) AssetBundleLoader._mainAssetBundle == (Object) null)
-      {
-        LogManager.Error("AssetBundleLoader: Failed to load 'playerprefab' asset bundle.");
-        return false;
-      }
-      if (!AssetBundleLoader.LoadAssetFromBundle<GameObject>(AssetBundleLoader._mainAssetBundle, "CL_Player", out AssetBundleLoader._clPlayerPrefabInternal))
-      {
-        LogManager.Error("AssetBundleLoader: Failed to load prefab 'CL_Player' from 'playerprefab' bundle.");
-        AssetBundleLoader._mainAssetBundle.Unload(true);
-        AssetBundleLoader._mainAssetBundle = (AssetBundle) null;
-        return false;
-      }
-      LogManager.Info("AssetBundleLoader: CL_Player prefab loaded successfully.");
-      return true;
-    }
+        _assets = AssetBundle.LoadFromFile(
+            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "/Assets/multiplayer_assets");
+        if (!_assets)
+        {
+            LogManager.Error("Failed to load AssetBundle, aborting!");
+            return false;
+        }
 
-    private static bool LoadAssetFromBundle<T>(
-      AssetBundle bundle,
-      string assetPathInBundle,
-      out T loadedObject)
-      where T : Object
-    {
-      loadedObject = bundle.LoadAsset<T>(assetPathInBundle);
-      if ((bool) (Object) loadedObject)
+        List<bool> loadResults =
+        [
+            //LoadFile(_assets, "Assets/Neb.Assets/White Knuckle Multiplayer/playerPrefab.prefab", out PlayerPrefab),
+            LoadFile(_assets, "Assets/Neb.Assets/White Knuckle Multiplayer/Multiplayer Lobby.prefab", out LobbyScreen),
+            LoadFile(_assets, "Assets/Neb.Assets/White Knuckle Multiplayer/Multiplayer Button.prefab", out LobbyButton)
+        ];
+        
+        if (loadResults.Any(result => result == false))
+        {
+            LogManager.Warn("Failed to load one or more assets, aborting!");
+            return false;
+        }
+
         return true;
-      LogManager.Error("AssetBundleLoader: LoadAssetFromBundle - Could not load '" + assetPathInBundle + "' as " + typeof (T).Name + ".");
-      return false;
     }
-
-    public static void UnloadAllAssets()
+    
+    private static bool LoadFile<T>(AssetBundle assets, string path, out T loadedObject) where T : Object
     {
-      if (!((Object) AssetBundleLoader._mainAssetBundle != (Object) null))
-        return;
-      AssetBundleLoader._mainAssetBundle.Unload(true);
-      AssetBundleLoader._mainAssetBundle = (AssetBundle) null;
-      AssetBundleLoader._clPlayerPrefabInternal = (GameObject) null;
-      LogManager.Info("AssetBundleLoader: Unloaded all assets.");
+        loadedObject = assets.LoadAsset<T>(path);
+        if (!loadedObject)
+        {
+            LogManager.Error($"Failed to load '{path}'");
+            return false;
+        }
+        
+        return true;
     }
-  }
 }

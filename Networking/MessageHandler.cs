@@ -178,7 +178,7 @@ namespace White_Knuckle_Multiplayer.Networking
         private GameObject InstantiatePlayerPrefab(ushort netID)
         {
             LogManager.Net.Info($"Initializing network clone for {netID}");
-            GameObject prefabFromBundle = AssetBundleLoader.CL_Player_Prefab;
+            GameObject prefabFromBundle = AssetBundleLoader.PlayerPrefab;
             var prefab = Object.Instantiate(prefabFromBundle);
             prefab.name = $"{playerPrefabName}_{netID}";
             prefab.transform.SetParent(transform.Find("Players").transform);

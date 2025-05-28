@@ -68,11 +68,17 @@
 		<Reference Include="Unity.Postprocessing.Runtime">
 			<HintPath>deps\Unity.Postprocessing.Runtime.dll</HintPath>
 		</Reference>
+		<Reference Include="Unity.TextMeshPro">
+		  <HintPath>deps\Unity.TextMeshPro.dll</HintPath>
+		</Reference>
 		<Reference Include="UnityEngine.CoreModule">
 		  <HintPath>deps\UnityEngine.CoreModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.PhysicsModule">
 		  <HintPath>deps\UnityEngine.PhysicsModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UI">
+		  <HintPath>deps\UnityEngine.UI.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
@@ -88,11 +94,7 @@
 	  <EmbeddedResource Remove="GameScripts\**" />
 	</ItemGroup>
 
-	<Target Name="PostBuildCopyMod" AfterTargets="Build">
-		<Message Text="Copying $(AssemblyName).dll → $(DeployDir)" Importance="high" />
-		<Copy
-				SourceFiles="$(TargetDir)$(AssemblyName).dll"
-				DestinationFolder="$(DeployDir)"
-				SkipUnchangedFiles="true" />
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="xcopy /Y /D &quot;$(TargetPath)&quot; &quot;O:\SteamLibrary\steamapps\common\White Knuckle\BepInEx\plugins\White Knuckle Multiplayer\&quot;" />
 	</Target>
 </Project>
