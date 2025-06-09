@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Riptide;
 using UnityEngine.Rendering.PostProcessing;
+using White_Knuckle_Multiplayer.Managers;
 using Object = UnityEngine.Object;
 using White_Knuckle_Multiplayer.Networking.Controllers;
 using White_Knuckle_Multiplayer.Networking.Messages;
@@ -23,6 +26,7 @@ namespace White_Knuckle_Multiplayer.Networking
         SpawnPlayer = 5,
         DespawnPlayer = 6,
         SceneChange = 7, // This one will propably be replaced
+        PlayerStateUpdate = 8,
     }
     
     /// <summary>
@@ -79,6 +83,9 @@ namespace White_Knuckle_Multiplayer.Networking
         // Keeping Track of NetID -> GameObject
         public readonly Dictionary<ushort, GameObject> _players = new();
 
+        public readonly List<ushort> PendingSpawns = new();
+        private Coroutine _pendingSpawnCheck;
+        
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -87,6 +94,79 @@ namespace White_Knuckle_Multiplayer.Networking
                 return;
             }
             Instance = this;
+        }
+
+        private void Start()
+        {
+            // Subscribe to player state changes
+            if (PlayerStateManager.Instance != null)
+            {
+                PlayerStateManager.Instance.OnLocalPlayerStateChanged += OnLocalPlayerStateChanged;
+                PlayerStateManager.Instance.OnPlayerStateChanged += OnPlayerStateChanged;
+            }
+            
+            // Start checking for pending spawns
+            _pendingSpawnCheck = StartCoroutine(CheckPendingSpawns());
+        }
+
+        private void OnLocalPlayerStateChanged(PlayerStateManager.PlayerState newState)
+        {
+            if (newState == PlayerStateManager.PlayerState.InGame)
+            {
+                // Process any pending spawns now that we're ready
+                ProcessPendingSpawns();
+            }
+        }
+
+        private void OnPlayerStateChanged(ushort netID, PlayerStateManager.PlayerState newState)
+        {
+            if (newState == PlayerStateManager.PlayerState.InGame && PendingSpawns.Contains(netID))
+            {
+                LogManager.Net.Info($"Processing pending spawns for player {netID}");
+                SpawnPlayer_Internal(netID);
+                PendingSpawns.Remove(netID);
+            }
+        }
+
+        private IEnumerator CheckPendingSpawns()
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(1f); // Check every second
+
+                if (PlayerStateManager.Instance?.CanSpawnPlayers == true)
+                {
+                    ProcessPendingSpawns();
+                }
+            }
+        }
+
+        private void ProcessPendingSpawns()
+        {
+            for (int i = PendingSpawns.Count - 1; i >= 0; i--)
+            {
+                ushort netID = PendingSpawns[i];
+                if (PlayerStateManager.Instance.ShouldSpawnPlayer(netID))
+                {
+                    LogManager.Net.Info($"Processing pending spawn for player {netID}");
+                    SpawnPlayer_Internal(netID);
+                    PendingSpawns.Remove(netID);
+                }
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (_pendingSpawnCheck != null)
+            {
+                StopCoroutine(_pendingSpawnCheck);
+            }
+
+            if (PlayerStateManager.Instance != null)
+            {
+                PlayerStateManager.Instance.OnLocalPlayerStateChanged -= OnLocalPlayerStateChanged;
+                PlayerStateManager.Instance.OnPlayerStateChanged -= OnPlayerStateChanged;
+            }
         }
 
         // HANDLERS //

@@ -34,7 +34,7 @@ namespace White_Knuckle_Multiplayer.Networking
             RiptideLogger.Initialize(LogManager.Server.Debug, LogManager.Server.Info, LogManager.Server.Warn, LogManager.Server.Error, false);
         }
 
-        private void FixedUpdate()
+        private void Update()
         {
             if (Server != null && Server.IsRunning)
             {

@@ -1,4 +1,5 @@
 using Riptide;
+using White_Knuckle_Multiplayer.Managers;
 using White_Knuckle_Multiplayer.Networking.Controllers;
 using White_Knuckle_Multiplayer.Networking.Messages;
 using White_Knuckle_Multiplayer.Networking.Routing;
@@ -15,8 +16,18 @@ public partial class MessageHandler
     private static void HandleSpawnPlayer_Client(Riptide.Message msg)
     {
         SpawnPlayerData data = msg.GetSerializable<SpawnPlayerData>();
-        LogManager.Client.Info($"SpawnPlayer for ID {data.NetID}");
-        Instance.SpawnPlayer_Internal(data.NetID);
+        LogManager.Client.Info($"SpawnPlayer request for ID {data.NetID}");
+        
+        // Only spawn if player state manager says it's safe to do so
+        if (PlayerStateManager.Instance != null && PlayerStateManager.Instance.ShouldSpawnPlayer(data.NetID))
+        {
+            Instance.SpawnPlayer_Internal(data.NetID);
+        }
+        else
+        {
+            LogManager.Client.Info($"Delaying spawn for player {data.NetID} - not ready yet");
+            Instance.PendingSpawns.Add(data.NetID);
+        }
     }
 
     // Handles Despawning players
@@ -54,6 +65,18 @@ public partial class MessageHandler
         }
     }
 
+    [WKMessageHandler((ushort)MessageID.PlayerStateUpdate, (byte)GroupID.Client)]
+    private static void HandlePlayerStateUpdate_Client(Riptide.Message msg)
+    {
+        PlayerStateUpdateData data = msg.GetSerializable<PlayerStateUpdateData>();
+        LogManager.Client.Info($"Received state update for player {data.NetID}: {data.State}");
+
+        if (PlayerStateManager.Instance != null)
+        {
+            PlayerStateManager.Instance.UpdatePlayerState(data.NetID, data.State, data.Username);
+        }
+    }
+    
     // Handles SceneChange
     // already done by Nebby
     [WKMessageHandler((ushort)MessageID.SceneChange, (byte)GroupID.Client)]

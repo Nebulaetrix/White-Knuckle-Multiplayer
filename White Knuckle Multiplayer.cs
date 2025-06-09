@@ -21,7 +21,6 @@ public class WkMultiplayer : BaseUnityPlugin
     public static GameManager GameManager;
     private CommandManager commandManager;
     private CoroutineRunner coroutineRunner;
-    private Scene _lobby;
 
     private void Awake()
     {
@@ -44,10 +43,11 @@ public class WkMultiplayer : BaseUnityPlugin
     
     private void OnSceneLoad(Scene scene, LoadSceneMode mode)
     {
+        GameManager.InitializeWKNetworking();
         switch (loaded)
         {
             case false when scene.name == "Game-Main":
-                GameManager.InitializeWKNetworking();
+                
                     
                 if (coroutineRunner == null)
                 {
@@ -94,6 +94,7 @@ public class WkMultiplayer : BaseUnityPlugin
             mpButton.GetComponent<Button>().onClick.AddListener(() =>
             { 
                 lobbyPane.GetComponent<UI_LerpOpen>().Show();
+                LobbyManager.Instance.CreateLobby();
             });
             
             

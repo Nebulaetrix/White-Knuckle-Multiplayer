@@ -21,6 +21,7 @@ public class GameManager
     public NetworkClient networkClient { get; private set; }
     public NetworkServer networkServer { get; private set; }
     public MessageHandler messageHandler { get; private set; }
+    public PlayerStateManager playerStateManager { get; private set; }
 
     public GameManager()
     {
@@ -44,8 +45,8 @@ public class GameManager
         networkServer = WKNetworkingObject.AddComponent<NetworkServer>();
         messageHandler = WKNetworkingObject.AddComponent<MessageHandler>();
         
-        // Adding this via SteamManager manually after Init
-        //WKNetworkingObject.AddComponent<LobbyManager>();
+        // Add PlayerStateManager
+        playerStateManager = WKNetworkingObject.AddComponent<PlayerStateManager>();
 
         SpriteCache.Preload(
             "Hands_idle",
@@ -74,6 +75,9 @@ public class GameManager
             LogManager.Info($"Starting host on port {port} (max {maxClients})...");
             networkServer.StartServer(port, maxClients);
 
+            // Update player state to hosting
+            playerStateManager.StartHosting(true);
+            
             // Connect local client to server
             LogManager.Info($"Connecting local client to {address}:{port}...");
             networkClient.StartClient(address, port);
@@ -100,6 +104,8 @@ public class GameManager
             LogManager.Info($"Starting steam host on port {port}...");
             networkServer.StartServer(port, maxClients, "steam");
 
+            playerStateManager.StartHosting(true);
+            
             LogManager.Info($"Connecting local client to {address}:{port}...");
             networkClient.StartClient(address, port, "steam", true);
         }
@@ -120,6 +126,8 @@ public class GameManager
         {
             LogManager.Info($"Connecting to server at {serverAddress}:{serverPort}...");
             networkClient.StartClient(serverAddress, serverPort);
+            
+            playerStateManager.StartAsClient(true);
         }
         catch (Exception ex)
         {
@@ -135,6 +143,8 @@ public class GameManager
         {
             LogManager.Info($"Connecting to steam WKNetworking server at {serverAddress}...");
             networkClient.StartClient(serverAddress, serverPort, "steam");
+            
+            playerStateManager.StartAsClient(true);
         }
         catch (Exception ex)
         {

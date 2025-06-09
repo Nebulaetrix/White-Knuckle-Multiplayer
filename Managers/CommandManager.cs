@@ -33,6 +33,9 @@ internal class CommandManager
         {
             // Start server and connect local client
             gameManager.StartHost();
+
+            PlayerStateManager.Instance.StartHosting(true);
+            PlayerStateManager.Instance.SetLocalPlayerState(PlayerStateManager.PlayerState.InGame);
             
             CommandConsole.Log("WKNetworking server started!");
         }
@@ -180,6 +183,8 @@ internal class CommandManager
         {
             // Start the client
             gameManager.StartClient(serverAddress, serverPort);
+            PlayerStateManager.Instance.StartAsClient(true);
+            PlayerStateManager.Instance.SetLocalPlayerState(PlayerStateManager.PlayerState.InGame);
             
             CommandConsole.Log($"Connecting to local WKNetworking server at {serverAddress}...");
         }

@@ -48,7 +48,7 @@ namespace White_Knuckle_Multiplayer
         private static ManualLogSource baseLogger;
 
         /// <summary>Enable or disable all Debug-level logging.</summary>
-        public static bool DebugEnabled { get; set; } = false;
+        public static bool DebugEnabled { get; private set; } = true;
 
         /// <summary>Initialize the logger. Call in BepInEx plugin's Awake/OnEnable.</summary>
         public static void Init(ManualLogSource logger)

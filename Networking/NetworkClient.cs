@@ -2,6 +2,7 @@
 using UnityEngine;
 using Riptide;
 using Riptide.Utils;
+using White_Knuckle_Multiplayer.Managers;
 using White_Knuckle_Multiplayer.Networking.Messages;
 using White_Knuckle_Multiplayer.Networking.Routing;
 using White_Knuckle_Multiplayer.Networking.Transports.Steam;
@@ -118,10 +119,13 @@ namespace White_Knuckle_Multiplayer.Networking
                 username = $"Player_{Client.Id}";
             }
 
-            // Send Join request to server
-            // TODO: Replace with lobbies
-            var modList = ModListHelper.GetLoadedModsList();
-            MessageSender.SendJoinRequest(new JoinRequestData(username, MyPluginInfo.PLUGIN_VERSION, modList));
+            // Update player state
+            if (PlayerStateManager.Instance != null)
+            {
+                PlayerStateManager.Instance.StartAsClient(true);
+            }
+            //var modList = ModListHelper.GetLoadedModsList();
+            //MessageSender.SendJoinRequest(new JoinRequestData(username, MyPluginInfo.PLUGIN_VERSION, modList));
         }
 
         private void OnConnectionFailed(object sender, EventArgs e)
@@ -133,6 +137,14 @@ namespace White_Knuckle_Multiplayer.Networking
         {
             LogManager.Client.Info("Client Disconnected");
 
+            // Update PlayerState
+            if (PlayerStateManager.Instance != null)
+            {
+                PlayerStateManager.Instance.HandleDisconnect();
+            }
+            
+            
+            // Clean up spawned players
             foreach (ushort netID in MessageHandler.Instance._players.Keys)
             {
                 MessageHandler.Instance.DespawnPlayer(netID);

@@ -11,11 +11,16 @@ namespace White_Knuckle_Multiplayer.Networking.Routing;
         // Sending Request on join, server authorizes and keeps track of this
         public static void SendJoinRequest(JoinRequestData data)
         {
+            if (NetworkClient.Instance?.Client?.IsConnected != true)
+            {
+                LogManager.Client.Warn("Cannot send join request - not connected");
+                return;
+            }
             Riptide.Message msg = Riptide.Message.Create(MessageSendMode.Reliable, (ushort)MessageID.JoinRequest);
-            
             msg.AddSerializable(data);
-
             NetworkClient.Instance.Client.Send(msg);
+            
+            LogManager.Client.Debug("Sent join request to server");
         }
 
         // Sending Player Object Data
@@ -40,6 +45,21 @@ namespace White_Knuckle_Multiplayer.Networking.Routing;
             LogManager.Net.Error("Cannot send PlayerDataSync: no client or server available.");
         }
 
+        public static void SendPlayerStateUpdate(PlayerStateUpdateData data)
+        {
+            if (NetworkClient.Instance?.Client?.IsConnected != true)
+            {
+                LogManager.Client.Warn("Cannot send player state update - not connected");
+                return;
+            }
+            
+            Riptide.Message msg = Riptide.Message.Create(MessageSendMode.Reliable, (ushort)MessageID.PlayerStateUpdate);
+            msg.AddSerializable(data);
+            NetworkClient.Instance.Client.Send(msg);
+            
+            LogManager.Client.Debug($"Sent player state update: {data.State}");
+        }
+        
         // Sending Scene Change
         // TODO: Replace this with actual level synchronization
         public static void SendLevelData(string[] sceneName)

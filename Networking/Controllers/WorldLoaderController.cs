@@ -22,7 +22,9 @@ public class WorldLoaderController : MonoBehaviour
     private static void GetGenerationListPatch(List<M_Level> __result)
     {
         LogManager.Info("GetGenerationListPatch: Started");
-    
+        return;
+        // WHY THE FUCK DOES THIS BREAK LOCAL PLAYING
+        
         if (IsClientAndHasGenerationList())
         {
             SyncClientLevels(__result);

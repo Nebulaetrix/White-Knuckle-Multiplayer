@@ -29,6 +29,8 @@ public class SteamManagerAwakePatch : MonoBehaviour
 		    Destroy(__instance.gameObject);
 		    return;
 	    }
+
+	    GameObject lobbyManagerObject;
 	    
 	    LogManager.SteamClient.Warn("Patching SteamManager, expect breakage for scores");
 	    var steamAPIInitialized = SteamAPI.Init();
@@ -36,10 +38,15 @@ public class SteamManagerAwakePatch : MonoBehaviour
 	    if (!steamAPIInitialized) {
 		    Debug.LogError("[Steamworks.NET] SteamAPI_Init() failed. Refer to Valve's documentation or the comment above this line for more information.", __instance);
 		    SteamManager.initialized = false;
+		    
+		    LogManager.SteamClient.Warn("LobbyManager created From patch!");
+		    lobbyManagerObject = new GameObject("LobbyManager");
+		    DontDestroyOnLoad(lobbyManagerObject);
+		    lobbyManagerObject.AddComponent<LobbyManager>();
+		    
 		    return;
 	    }
 	    SteamManager.initialized = true;
-	    SteamManager.instance = __instance;
 	    
 	    try {
 		    if (SteamAPI.RestartAppIfNecessary((AppId_t)AppID)) {
@@ -65,7 +72,7 @@ public class SteamManagerAwakePatch : MonoBehaviour
 	    DontDestroyOnLoad(__instance.gameObject);
 	    
 		LogManager.SteamClient.Warn("LobbyManager created From patch!");
-		var lobbyManagerObject = new GameObject("LobbyManager");
+		lobbyManagerObject = new GameObject("LobbyManager");
 		DontDestroyOnLoad(lobbyManagerObject);
 		lobbyManagerObject.AddComponent<LobbyManager>();
 	}

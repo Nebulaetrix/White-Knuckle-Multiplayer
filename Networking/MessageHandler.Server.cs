@@ -1,5 +1,6 @@
 using System.Linq;
 using Riptide;
+using White_Knuckle_Multiplayer.Managers;
 using White_Knuckle_Multiplayer.Networking.Messages;
 using White_Knuckle_Multiplayer.Networking.Routing;
 using White_Knuckle_Multiplayer.Utils;
@@ -61,10 +62,18 @@ public partial class MessageHandler
         
 
         // Broadcast spawn to everyone
-        Riptide.Message spawnMsg = Riptide.Message.Create(MessageSendMode.Reliable, (ushort)MessageID.SpawnPlayer);
-        spawnMsg.AddSerializable(new SpawnPlayerData(clientId));
-        NetworkServer.Instance.Server.SendToAll(spawnMsg);
+        //Riptide.Message spawnMsg = Riptide.Message.Create(MessageSendMode.Reliable, (ushort)MessageID.SpawnPlayer);
+        //spawnMsg.AddSerializable(new SpawnPlayerData(clientId));
+        //NetworkServer.Instance.Server.SendToAll(spawnMsg);
 
+        // Above replaced by States
+        // Send only player state update, which will handle spawning if ready
+        if (PlayerStateManager.Instance != null)
+        {
+            PlayerStateManager.Instance.UpdatePlayerState(clientId, PlayerStateManager.PlayerState.InGame, data.Username);
+        }
+        
+        
         // Always tell the new Client about the host client, don't send this to host himself
         if (clientId != 1)
         {
@@ -92,6 +101,31 @@ public partial class MessageHandler
     {
         // Relay to all except sender
         NetworkServer.Instance.Server.SendToAll(msg, fromClientId);
+    }
+
+    [WKMessageHandler((ushort)MessageID.PlayerStateUpdate, (byte)GroupID.Server)]
+    private static void HandlePlayerStateUpdate_Server(ushort fromClientId, Riptide.Message msg)
+    {
+        PlayerStateUpdateData data = msg.GetSerializable<PlayerStateUpdateData>();
+        LogManager.Client.Info($"Player {fromClientId} state update: {data.State}");
+        
+        // Update server's player state tracking
+        if (PlayerStateManager.Instance != null)
+        {
+            PlayerStateManager.Instance.UpdatePlayerState(data.NetID, data.State, data.Username);
+        }
+        
+        // Relay to all other clients
+        NetworkServer.Instance.Server.SendToAll(msg, fromClientId);
+        
+        // If player just became ready, send spawn message
+        if (data.State == PlayerStateManager.PlayerState.InGame)
+        {
+            LogManager.Server.Info($"Player {fromClientId} is now ready - sending spawn message");
+            Riptide.Message spawnMsg = Riptide.Message.Create(MessageSendMode.Reliable, (ushort)MessageID.SpawnPlayer);
+            spawnMsg.AddSerializable(new SpawnPlayerData(fromClientId));
+            NetworkServer.Instance.Server.Send(spawnMsg, fromClientId);
+        }
     }
 
     // Handles SceneChange
