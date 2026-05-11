@@ -142,6 +142,8 @@
 	  <Content Include=".git\refs\heads\master" />
 	  <Content Include=".git\refs\remotes\origin\feature\better-networking" />
 	  <Content Include=".git\refs\remotes\origin\HEAD" />
+	  <Content Include=".idea\.idea.WKMultiplayer.dir\.idea\vcs.xml" />
+	  <Content Include=".idea\.idea.WKMultiplayer.dir\.idea\workspace.xml" />
 	  <Content Include="Folder.DotSettings.user" />
 	  <Content Include="White Knuckle Multiplayer.csproj.user" />
 	</ItemGroup>
