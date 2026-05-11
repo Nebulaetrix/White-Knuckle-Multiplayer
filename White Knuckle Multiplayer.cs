@@ -1,8 +1,8 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using White_Knuckle_Multiplayer.Managers;
-using White_Knuckle_Multiplayer.Networking;
 
 namespace White_Knuckle_Multiplayer;
 
@@ -11,19 +11,22 @@ public class WkMultiplayer : BaseUnityPlugin
 {
     private bool loaded = false;
 
-    public static GameManager GameManager;
     private CommandManager commandManager;
-    private CoroutineRunner coroutineRunner;
+
+    private MultiplayerGameManager gMan;
 
     private void Awake()
     {
-        LogManager.Init(base.Logger);
+        LogManager.Init(Logger);
 
-        GameManager = new GameManager();
-
+        GameObject gmObj = new GameObject("MultiplayerManager");
+        DontDestroyOnLoad(gmObj);
+        gMan = gmObj.AddComponent<MultiplayerGameManager>();
+        
+        
         SceneManager.sceneLoaded += OnSceneLoad;
 
-        LogManager.Info($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+        LogManager.Info($"Plugin {MyPluginInfo.PLUGIN_GUID} v{MyPluginInfo.PLUGIN_VERSION} is loaded!");
     }
 
     private void OnSceneLoad(Scene scene, LoadSceneMode mode)
@@ -38,17 +41,7 @@ public class WkMultiplayer : BaseUnityPlugin
         switch (loaded)
         {
             case false when scene.name == "Game-Main":
-                GameManager.InitializeWKNetworking();
-                    
-                if (coroutineRunner == null)
-                {
-                    var coroutineObject = new UnityEngine.GameObject("CoroutineRunner");
-                    UnityEngine.Object.DontDestroyOnLoad(coroutineObject);
-                    coroutineRunner = coroutineObject.AddComponent<CoroutineRunner>();
-                    // LogManager.Info("Created CoroutineRunner"); // Original comment
-                }
-                    
-                commandManager = new CommandManager(GameManager, coroutineRunner, coroutineRunner);
+                commandManager = new CommandManager(gMan);
                     
                 AddCommands();
                 loaded = true;

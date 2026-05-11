@@ -3,26 +3,22 @@ using System.Collections;
 using BepInEx.Logging;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using White_Knuckle_Multiplayer.Networking;
+using White_Knuckle_Multiplayer.Utils;
 
 namespace White_Knuckle_Multiplayer.Managers;
 
 internal class CommandManager
 {
-    private readonly GameManager gameManager;
-    private readonly MonoBehaviour coroutineHost;
-    private readonly CoroutineRunner coroutineRunner;
-
+    private readonly MultiplayerGameManager gameManager;
     private const string MessageShutdown = "Shutting down host and clients...";
     private const string SceneMainMenu = "Main-Menu";
 
     // Events
 
-    public CommandManager(GameManager gameManager, MonoBehaviour coroutineHost, CoroutineRunner coroutineRunner)
+    public CommandManager(MultiplayerGameManager gameManager)
     {
         this.gameManager = gameManager;
-        this.coroutineHost = coroutineHost;
-        this.coroutineRunner = coroutineRunner;
+
     }
 
     public void HandleLocalHostCommand(string[] args)
@@ -32,7 +28,7 @@ internal class CommandManager
         try
         {
             // Start server and connect local client
-            gameManager.StartHost();
+            gameManager.Host();
             
             CommandConsole.Log("WKNetworking server started!");
         }
@@ -61,7 +57,7 @@ internal class CommandManager
         try
         {
             // Start the client
-            gameManager.StartClient(serverAddress, serverPort);
+            gameManager.Join(serverAddress, serverPort);
             
             CommandConsole.Log($"Connecting to local WKNetworking server at {serverAddress}...");
         }
@@ -78,7 +74,13 @@ internal class CommandManager
         try
         {
             CommandConsole.Log("Disconnecting from WKNetworking server/stopping WKNetworking server...");
-            gameManager.DisconnectClient();
+            gameManager.Client.Disconnect();
+
+            if (gameManager.IsServer)
+            {
+                gameManager.Server.Stop();
+            }
+            
             CommandConsole.Log("Disconnected from WKNetworking server");
         }
         catch (Exception ex)

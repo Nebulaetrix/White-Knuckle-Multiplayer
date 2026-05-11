@@ -25,6 +25,10 @@ namespace White_Knuckle_Multiplayer
     ///         <term>Net</term>
     ///         <description>prefixes messages with [NET]</description>
     ///     </item>
+    ///     <item>
+    ///         <term>Registry</term>
+    ///         <description>prefixes messages with [Registry]</description>
+    ///     </item>
     /// </list>
     ///
     /// <para>
@@ -103,6 +107,19 @@ namespace White_Knuckle_Multiplayer
             }
             public static void Warn(string message) => baseLogger?.LogWarning($"[NET] {message}");
             public static void Error(string message) => baseLogger?.LogError($"[NET] {message}");
+        }
+        
+        /// <summary>Registry-context logging.</summary>
+        public static class Registry
+        {
+            public static void Info(string message) => baseLogger?.LogInfo($"[REGISTRY] {message}");
+            public static void Debug(string message)
+            {
+                if (DebugEnabled)
+                    baseLogger?.LogDebug($"[REGISTRY] {message}");
+            }
+            public static void Warn(string message) => baseLogger?.LogWarning($"[REGISTRY] {message}");
+            public static void Error(string message) => baseLogger?.LogError($"[REGISTRY] {message}");
         }
     }
 }

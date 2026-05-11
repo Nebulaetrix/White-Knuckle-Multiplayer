@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>monksilly.White_Knuckle_Multiplayer</name>
+    </assembly>
+    <members>
+        <member name="T:White_Knuckle_Multiplayer.LogManager">
+             <summary>
+             Centralized logging with four contexts:
+             <list type="table">
+                 <listheader>
+                     <term>Type</term>
+                     <description>Description</description>
+                 </listheader>
+                 <item>
+                     <term>Base</term>
+                     <description>plain BepInEx logger</description>
+                 </item>
+                 <item>
+                     <term>Server</term>
+                     <description>prefixes messages with [SERVER]</description>
+                 </item>
+                 <item>
+                     <term>Client</term>
+                     <description>prefixes messages with [CLIENT]</description>
+                 </item>
+                 <item>
+                     <term>Net</term>
+                     <description>prefixes messages with [NET]</description>
+                 </item>
+                 <item>
+                     <term>Registry</term>
+                     <description>prefixes messages with [Registry]</description>
+                 </item>
+             </list>
+            
+             <para>
+             Initialize once in plugin entrypoint:
+                 <code>LogManager.Init(Logger);</code>
+             </para>
+             <para>
+             Then to enable or disable debug logs at runtime:
+                 <code>LogManager.DebugEnabled = true;</code>
+             </para>
+             <para>
+             Then use anywhere like so:
+                 <code>
+                     LogManager.Server.Info("Started");
+                     LogManager.Client.Debug("Value={0}", value);
+                 </code>
+             </para>
+             </summary>
+        </member>
+        <member name="P:White_Knuckle_Multiplayer.LogManager.DebugEnabled">
+            <summary>Enable or disable all Debug-level logging.</summary>
+        </member>
+        <member name="M:White_Knuckle_Multiplayer.LogManager.Init(BepInEx.Logging.ManualLogSource)">
+            <summary>Initialize the logger. Call in BepInEx plugin's Awake/OnEnable.</summary>
+        </member>
+        <member name="M:White_Knuckle_Multiplayer.LogManager.Info(System.String)">
+            <summary>Basic BepInEx logging methods.</summary>
+        </member>
+        <member name="T:White_Knuckle_Multiplayer.LogManager.Server">
+            <summary>Server-context logging.</summary>
+        </member>
+        <member name="T:White_Knuckle_Multiplayer.LogManager.Client">
+            <summary>Client-context logging.</summary>
+        </member>
+        <member name="T:White_Knuckle_Multiplayer.LogManager.Net">
+            <summary>Network-context logging.</summary>
+        </member>
+        <member name="T:White_Knuckle_Multiplayer.LogManager.Registry">
+            <summary>Registry-context logging.</summary>
+        </member>
+        <member name="M:White_Knuckle_Multiplayer.Managers.MultiplayerGameManager.Host(System.String,System.UInt16,System.UInt16,System.Boolean)">
+            <summary>
+            Creates the Server and Auto-joins it by default
+            </summary>
+            <param name="ip">The IP Address that it should be hosted on. Defaults to 127.0.0.1 .</param>
+            <param name="port">The port on which the server should be hosted. Defaults to 7777.</param>
+            <param name="maxClients">The maximum number of clients that can join. Defaults to 256.</param>
+            <param name="autoJoin">Whether to auto-join when hosting. Defaults to true.</param>
+        </member>
+        <member name="M:White_Knuckle_Multiplayer.Managers.MultiplayerGameManager.Join(System.String,System.UInt16)">
+            <summary>
+            Joins as a Client.
+            </summary>
+            <param name="ip">IP Address of the host.</param>
+            <param name="port">Port which the host is hosting on.</param>
+        </member>
+        <member name="M:White_Knuckle_Multiplayer.Utils.CoroutineRunner.StartCoroutine(System.Collections.IEnumerator)">
+            <summary>
+            Starts a coroutine from anywhere in your mod (even static methods).
+            </summary>
+        </member>
+        <member name="M:White_Knuckle_Multiplayer.Utils.CoroutineRunner.StopCoroutine(UnityEngine.Coroutine)">
+            <summary>
+            Stops a previously started coroutine.
+            </summary>
+        </member>
+    </members>
+</doc>

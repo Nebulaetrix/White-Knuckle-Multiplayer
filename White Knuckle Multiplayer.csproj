@@ -1,20 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<!--
-          Default plugin folder; each dev needs to override this
-        -->
-		<DeployDir Condition="'$(DeployDir)' == ''">
-			D:\SteamLibrary\steamapps\common\White Knuckle\BepInEx\plugins\WK_Multiplayer
-		</DeployDir>
-	</PropertyGroup>
-	
+
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
-		<AssemblyName>White_Knuckle_Multiplayer</AssemblyName>
+		<AssemblyName>monksilly.White_Knuckle_Multiplayer</AssemblyName>
 		<Product>White Knuckle Multiplayer</Product>
 		<Version>0.0.1</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<LangVersion>latest</LangVersion>
+		<LangVersion>14.0</LangVersion>
 		<RestoreAdditionalProjectSources>
 			https://api.nuget.org/v3/index.json;
 			https://nuget.bepinex.dev/v3/index.json;
@@ -22,6 +14,9 @@
 		</RestoreAdditionalProjectSources>
 		<RootNamespace>White_Knuckle_Multiplayer</RootNamespace>
 	</PropertyGroup>
+
+	<Import Project="Properties/DeployToPlugins.targets" />
+	
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
 	  <DocumentationFile>docs\White Knuckle Multiplayer.xml</DocumentationFile>
 	  <NoWarn>1701;1702;CS1591;CS1574</NoWarn>
@@ -47,38 +42,30 @@
 
 	<ItemGroup>
 		<Reference Include="Assembly-CSharp">
-			<HintPath>deps\Assembly-CSharp.dll</HintPath>
+			<HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Assembly-CSharp.dll</HintPath>
 		</Reference>
 		<Reference Include="RiptideNetworking">
-		  <HintPath>deps\RiptideNetworking.dll</HintPath>
-		  <Private>True</Private>
-		</Reference>
-		<Reference Include="Steamworks.NET">
-		  <HintPath>deps\Steamworks.NET.dll</HintPath>
+		  <HintPath>Libs\RiptideNetworking.dll</HintPath>
 		</Reference>
 		<Reference Include="Unity.Collections">
-			<HintPath>deps\Unity.Collections.dll</HintPath>
+			<HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Unity.Collections.dll</HintPath>
 		</Reference>
 		<Reference Include="Unity.Mathematics">
-			<HintPath>deps\Unity.Mathematics.dll</HintPath>
+			<HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Unity.Mathematics.dll</HintPath>
 		</Reference>
 		<Reference Include="Unity.Postprocessing.Runtime">
-			<HintPath>deps\Unity.Postprocessing.Runtime.dll</HintPath>
+			<HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Unity.Postprocessing.Runtime.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.CoreModule">
-		  <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\White Knuckle\White Knuckle_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+		  <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.PhysicsModule">
-		  <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\White Knuckle\White Knuckle_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+		  <HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/UnityEngine.PhysicsModule.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
 		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="riptide\" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -89,11 +76,7 @@
 	  <EmbeddedResource Remove="GameScripts\**" />
 	</ItemGroup>
 
-	<Target Name="PostBuildCopyMod" AfterTargets="Build">
-		<Message Text="Copying $(AssemblyName).dll → $(DeployDir)" Importance="high" />
-		<Copy
-				SourceFiles="$(TargetDir)$(AssemblyName).dll"
-				DestinationFolder="$(DeployDir)"
-				SkipUnchangedFiles="true" />
-	</Target>
+	<ItemGroup>
+	  <Content Include="White_Knuckle_Multiplayer.csproj.user" />
+	</ItemGroup>
 </Project>
