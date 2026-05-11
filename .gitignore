@@ -1,16 +1,18 @@
 /deps
 !/deps/FacepunchTransport.cs
 
+.idea
+
+/Libs
 /bin
 /obj
 
-/.idea
-/White Knuckle Multiplayer.sln
-/.vs
+*.vs
 /WKMP.sln.DotSettings.user
 /White Knuckle Multiplayer.sln.DotSettings.user
 /Folder.DotSettings.user
 
 *.csproj.user
+
 
 .env

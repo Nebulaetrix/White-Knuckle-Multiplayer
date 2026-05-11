@@ -22,8 +22,6 @@
 	  <NoWarn>1701;1702;CS1591;CS1574</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
-	  <None Remove=".gitignore" />
-	  <None Remove="LICENSE" />
 	  <None Remove="Mono.Cecil.dll" />
 	  <None Remove="Mono.Cecil.Mdb.dll" />
 	  <None Remove="Mono.Cecil.Pdb.dll" />
@@ -77,6 +75,79 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Content Include="White_Knuckle_Multiplayer.csproj.user" />
+	  <Content Include=".git\COMMIT_EDITMSG" />
+	  <Content Include=".git\config" />
+	  <Content Include=".git\description" />
+	  <Content Include=".git\FETCH_HEAD" />
+	  <Content Include=".git\HEAD" />
+	  <Content Include=".git\hooks\applypatch-msg.sample" />
+	  <Content Include=".git\hooks\commit-msg.sample" />
+	  <Content Include=".git\hooks\fsmonitor-watchman.sample" />
+	  <Content Include=".git\hooks\post-update.sample" />
+	  <Content Include=".git\hooks\pre-applypatch.sample" />
+	  <Content Include=".git\hooks\pre-commit.sample" />
+	  <Content Include=".git\hooks\pre-merge-commit.sample" />
+	  <Content Include=".git\hooks\pre-push.sample" />
+	  <Content Include=".git\hooks\pre-rebase.sample" />
+	  <Content Include=".git\hooks\pre-receive.sample" />
+	  <Content Include=".git\hooks\prepare-commit-msg.sample" />
+	  <Content Include=".git\hooks\push-to-checkout.sample" />
+	  <Content Include=".git\hooks\sendemail-validate.sample" />
+	  <Content Include=".git\hooks\update.sample" />
+	  <Content Include=".git\index" />
+	  <Content Include=".git\info\exclude" />
+	  <Content Include=".git\logs\HEAD" />
+	  <Content Include=".git\logs\refs\heads\feature\better-networking" />
+	  <Content Include=".git\logs\refs\heads\master" />
+	  <Content Include=".git\logs\refs\remotes\origin\feature\better-networking" />
+	  <Content Include=".git\logs\refs\remotes\origin\HEAD" />
+	  <Content Include=".git\objects\03\ba37c4be11a2f7f7479536790c9770bb457926" />
+	  <Content Include=".git\objects\08\32e23984ef59567808f4b8e647136a94971809" />
+	  <Content Include=".git\objects\0d\a01df775404962ec3a2257f06d396101d57d91" />
+	  <Content Include=".git\objects\1f\738d8aa52d1e1d9215d3dc47d2abe031670d43" />
+	  <Content Include=".git\objects\29\cd170d4bf0a34a7a33388c37de48e7294398ea" />
+	  <Content Include=".git\objects\30\602bad3838d6b21cfc158f91f9211847ebd9ed" />
+	  <Content Include=".git\objects\33\8352ff811fecbdd5c92a2b0a6c8e8a18bc24c6" />
+	  <Content Include=".git\objects\3b\3aa74a22d69202c430da203048f6871aee4701" />
+	  <Content Include=".git\objects\45\3311a79a313ca116390a1707131d304ff11af8" />
+	  <Content Include=".git\objects\48\7e8c098ffd2638480575bc5d4f50bc315ec3a4" />
+	  <Content Include=".git\objects\4c\8f2d5b5b31b4f3a6f95ea99ed9d0671894e4fd" />
+	  <Content Include=".git\objects\56\961839ebf0f106964524e023997855d6b3e162" />
+	  <Content Include=".git\objects\59\0673c12631cb11713c97adce6d8450b0017226" />
+	  <Content Include=".git\objects\5f\b02e0bf5c0aa95ad4b2051a86d4c54592122ff" />
+	  <Content Include=".git\objects\60\efd1702b0c22861b3a6b3c35c8832c70e70873" />
+	  <Content Include=".git\objects\62\70ecded07157fc057caba3de38df76bd4a1215" />
+	  <Content Include=".git\objects\81\5dd703d853afaab7b23beca337724c664d5343" />
+	  <Content Include=".git\objects\81\f6cdedd3424a5a75d91f13479e5a44ce044a4e" />
+	  <Content Include=".git\objects\8d\0ad84e80686f918728e36f5b749d6cb27dd560" />
+	  <Content Include=".git\objects\8f\15181b5e910c3b2f677d67723256af9694bba6" />
+	  <Content Include=".git\objects\97\7e0db6211684a5de7efe8322a707bf2864d752" />
+	  <Content Include=".git\objects\b2\7a0fc6c4b833899a987bb734c3033eb2688411" />
+	  <Content Include=".git\objects\c2\217437555232d013be98ce256136ae00ad83e7" />
+	  <Content Include=".git\objects\c8\e3e81f791c9905e2cdb5872a8fa59cdf150dee" />
+	  <Content Include=".git\objects\c9\f9586268f7ba3e2e8393e1843493904924c2d4" />
+	  <Content Include=".git\objects\d1\36c36c740e7e363e6d4b1d32bf0020cf5b8d26" />
+	  <Content Include=".git\objects\d8\add79c4e0f7088ade3c0053f30519b2f3bae54" />
+	  <Content Include=".git\objects\e0\bce38c1656f8e08fccd82452a2e0f648ff3843" />
+	  <Content Include=".git\objects\e5\e18a249d78df99a1b87eb1cb73e461cc1cdeeb" />
+	  <Content Include=".git\objects\e6\9de29bb2d1d6434b8b29ae775ad8c2e48c5391" />
+	  <Content Include=".git\objects\f1\3b9d2dd4ebd8fa54c37e5acd51d0627aa05d0c" />
+	  <Content Include=".git\objects\f4\2a592d2a28d4f1c36ed7e172bd5c6548be02cd" />
+	  <Content Include=".git\objects\f5\6ed666fffa2d38abff76a7d9bc7a05ec431c40" />
+	  <Content Include=".git\objects\pack\pack-1b3c8f5a2d90ea3b420d673a7ec2da6e5c1bd0a3.idx" />
+	  <Content Include=".git\objects\pack\pack-1b3c8f5a2d90ea3b420d673a7ec2da6e5c1bd0a3.pack" />
+	  <Content Include=".git\objects\pack\pack-1b3c8f5a2d90ea3b420d673a7ec2da6e5c1bd0a3.rev" />
+	  <Content Include=".git\packed-refs" />
+	  <Content Include=".git\refs\heads\feature\better-networking" />
+	  <Content Include=".git\refs\heads\master" />
+	  <Content Include=".git\refs\remotes\origin\feature\better-networking" />
+	  <Content Include=".git\refs\remotes\origin\HEAD" />
+	  <Content Include="Folder.DotSettings.user" />
+	  <Content Include="White Knuckle Multiplayer.csproj.user" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include=".git\objects\info\" />
+	  <Folder Include=".git\refs\tags\" />
 	</ItemGroup>
 </Project>
