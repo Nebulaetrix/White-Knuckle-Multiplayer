@@ -1,14 +1,14 @@
 using System;
-using UnityEngine;
 using Riptide;
 using Riptide.Utils;
-using Unity.Mathematics;
+using UnityEngine;
+using WhiteKnuckleMP.Utils;
 
-namespace White_Knuckle_Multiplayer.Managers;
+namespace WhiteKnuckleMP.Framework.Managers;
 
-public class MultiplayerGameManager : MonoBehaviour
+public class NetworkManager : MonoBehaviour
 {
-    public static MultiplayerGameManager Instance;
+    public static NetworkManager Instance;
 
     public bool IsServer => Server.IsRunning;
 
@@ -29,7 +29,9 @@ public class MultiplayerGameManager : MonoBehaviour
         Client = new Client();
 
         Client.Connected += OnJoinedServer;
+        Server.ClientConnected += OnServerClientConnected;
     }
+
 
     private void FixedUpdate()
     {
@@ -69,9 +71,14 @@ public class MultiplayerGameManager : MonoBehaviour
 
     private void OnJoinedServer(object sender, EventArgs e)
     {
-        LogManager.Net.Info("Server joined!");
+        LogManager.Net.Info("Joined server as client!");
     }
 
+    private void OnServerClientConnected(object sender, ServerConnectedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+    
     private void CreateDummyPrefab()
     {
         throw new NotImplementedException();

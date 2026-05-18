@@ -1,27 +1,48 @@
 ﻿using BepInEx;
-using BepInEx.Logging;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using White_Knuckle_Multiplayer.Managers;
+using WhiteKnuckleMP.Framework.Managers;
+using WhiteKnuckleMP.UI;
+using WhiteKnuckleMP.Utils;
+using WKLib;
+using WKLib.API;
 
-namespace White_Knuckle_Multiplayer;
+namespace WhiteKnuckleMP.Core;
 
-[BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
+[BepInPlugin(GUID, NAME, VERSION)]
+[BepInDependency(WKLibPlugin.GUID, BepInDependency.DependencyFlags.HardDependency)]
 public class WkMultiplayer : BaseUnityPlugin
 {
+    public const string GUID = "com.monksilly.WKMultiplayer";
+    public const string NAME = "White Knuckle Multiplayer";
+    public const string VERSION = "0.0.2";
+
+    public static WKLibAPI LibAPI = WKLibAPI.Create(NAME, GUID);
+    
     private bool loaded = false;
 
     private CommandManager commandManager;
 
-    private MultiplayerGameManager gMan;
+    private NetworkManager gMan;
+    
+    
+    
 
     private void Awake()
     {
+        
+        // Windows
+        LibAPI.AddWindow(WindowDeclarations.MainWin);
+        
+        // Mod List Buttons
+        LibAPI.AddToModList(new WKModTab());
+        
+        
         LogManager.Init(Logger);
 
         GameObject gmObj = new GameObject("MultiplayerManager");
         DontDestroyOnLoad(gmObj);
-        gMan = gmObj.AddComponent<MultiplayerGameManager>();
+        gMan = gmObj.AddComponent<NetworkManager>();
         
         
         SceneManager.sceneLoaded += OnSceneLoad;
@@ -67,5 +88,10 @@ public class WkMultiplayer : BaseUnityPlugin
         CommandConsole.AddCommand("disconnect", commandManager.HandleDisconnectCommand, false);
         
         LogManager.Info("Commands registered successfully");
+    }
+
+    private void OnDisable()
+    {
+        LibAPI.Destroy();
     }
 }

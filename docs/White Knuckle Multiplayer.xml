@@ -72,7 +72,7 @@
         <member name="T:White_Knuckle_Multiplayer.LogManager.Registry">
             <summary>Registry-context logging.</summary>
         </member>
-        <member name="M:White_Knuckle_Multiplayer.Managers.MultiplayerGameManager.Host(System.String,System.UInt16,System.UInt16,System.Boolean)">
+        <member name="M:White_Knuckle_Multiplayer.Managers.NetworkManager.Host(System.String,System.UInt16,System.UInt16,System.Boolean)">
             <summary>
             Creates the Server and Auto-joins it by default
             </summary>
@@ -81,7 +81,7 @@
             <param name="maxClients">The maximum number of clients that can join. Defaults to 256.</param>
             <param name="autoJoin">Whether to auto-join when hosting. Defaults to true.</param>
         </member>
-        <member name="M:White_Knuckle_Multiplayer.Managers.MultiplayerGameManager.Join(System.String,System.UInt16)">
+        <member name="M:White_Knuckle_Multiplayer.Managers.NetworkManager.Join(System.String,System.UInt16)">
             <summary>
             Joins as a Client.
             </summary>

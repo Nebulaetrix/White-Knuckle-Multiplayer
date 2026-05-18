@@ -1,14 +1,14 @@
 using System.Collections;
 using UnityEngine;
 
-namespace White_Knuckle_Multiplayer.Utils;
+namespace WhiteKnuckleMP.Utils;
 
 public static class CoroutineRunner
 {
     // A hidden, nested MonoBehaviour that will actually run the coroutines
     private class RunnerBehaviour : MonoBehaviour { }
 
-    private static RunnerBehaviour _runnerInstance;
+    private static RunnerBehaviour? _runnerInstance;
 
     // Ensures the runner object exists in the scene before we try to use it
     private static void EnsureRunnerExists()
@@ -27,13 +27,13 @@ public static class CoroutineRunner
     public static Coroutine StartCoroutine(IEnumerator routine)
     {
         EnsureRunnerExists();
-        return _runnerInstance.StartCoroutine(routine);
+        return _runnerInstance!.StartCoroutine(routine);
     }
 
     /// <summary>
     /// Stops a previously started coroutine.
     /// </summary>
-    public static void StopCoroutine(Coroutine routine)
+    public static void StopCoroutine(Coroutine? routine)
     {
         if (_runnerInstance != null && routine != null)
         {

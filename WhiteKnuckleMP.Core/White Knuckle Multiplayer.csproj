@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AssemblyName>monksilly.White_Knuckle_Multiplayer</AssemblyName>
+		<Product>White Knuckle Multiplayer</Product>
+		<Version>0.0.1</Version>
+		<RootNamespace>WhiteKnuckleMP.Core</RootNamespace>
+	</PropertyGroup>
+	
+	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+	  <DocumentationFile>docs\White Knuckle Multiplayer.xml</DocumentationFile>
+	  <NoWarn>1701;1702;CS1591;CS1574</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\WhiteKnuckleMP.Framework/WhiteKnuckleMP.Framework.csproj" />
+		<ProjectReference Include="..\WhiteKnuckleMP.Networking/WhiteKnuckleMP.Networking.csproj" />
+		<ProjectReference Include="..\WhiteKnuckleMP.UI/WhiteKnuckleMP.UI.csproj" />
+		<ProjectReference Include="..\WhiteKnuckleMP.Utils/WhiteKnuckleMP.Utils.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <DocFileItem Remove="docs\White Knuckle Multiplayer.xml" />
+	</ItemGroup>
+</Project>

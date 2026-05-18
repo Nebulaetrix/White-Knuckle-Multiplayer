@@ -4,8 +4,8 @@
 .idea
 
 /Libs
-/bin
-/obj
+**/bin
+**/obj
 
 *.vs
 /WKMP.sln.DotSettings.user
@@ -14,5 +14,6 @@
 
 *.csproj.user
 
+*.props.user
 
 .env

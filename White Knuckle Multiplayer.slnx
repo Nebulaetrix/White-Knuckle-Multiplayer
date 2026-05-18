@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="WhiteKnuckleMP.Core/White Knuckle Multiplayer.csproj" />
+  <Project Path="WhiteKnuckleMP.Framework/WhiteKnuckleMP.Framework.csproj" />
+  <Project Path="WhiteKnuckleMP.Networking/WhiteKnuckleMP.Networking.csproj" />
+  <Project Path="WhiteKnuckleMP.UI/WhiteKnuckleMP.UI.csproj" />
+  <Project Path="WhiteKnuckleMP.Utils/WhiteKnuckleMP.Utils.csproj" />
+</Solution>
