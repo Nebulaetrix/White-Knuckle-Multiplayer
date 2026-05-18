@@ -1,6 +1,7 @@
 using UnityEngine;
 using WhiteKnuckleMP.Framework.Managers;
 using WhiteKnuckleMP.Networking;
+using WhiteKnuckleMP.Networking.Messages;
 
 namespace WhiteKnuckleMP.Framework.Controllers.Player;
 
@@ -11,7 +12,7 @@ public class PlayerStateSender : MonoBehaviour
     private float _sendTimer; // Timer to track time since last update
     
     // References
-    private ENT_Player _localPlayer;
+    private ENT_Player _localPlayer = null!;
 
     public void Initialize(ushort netId)
     {
@@ -25,14 +26,17 @@ public class PlayerStateSender : MonoBehaviour
         if (_sendTimer < _sendInterval) return;
         _sendTimer = 0f;
 
+        var leftItem = GetItemName(0);
+        var rightItem = GetItemName(1);
+
+        var playerSyncMessage = new PlayerSyncMessage(_netID, transform.position, transform.rotation, leftItem, rightItem);
+        
         using (var packet = new NetworkPacket((ushort)MessageId.PlayerSync))
         {
-            packet.Write(_netID)
-                .Write(transform.position)
-                .Write(transform.rotation);
-            // TODO: Add hand sync & Item Sync back
+            playerSyncMessage.WriteTo(packet);
 
-            NetworkManager.Instance.Client.Send(packet.RawMessage);
+            // send over network
+            NetworkManager.Instance.Client?.Send(packet.RawMessage);
         }
     }
 

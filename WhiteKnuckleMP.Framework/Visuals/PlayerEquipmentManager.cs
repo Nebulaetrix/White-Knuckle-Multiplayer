@@ -7,10 +7,10 @@ namespace WhiteKnuckleMP.Framework.Visuals;
 
 public class PlayerEquipmentManager : MonoBehaviour
 {
-    private Transform _leftHandParent;
-    private Transform _rightHandParent;
-    private GameObject _leftItemInstance;
-    private GameObject _rightItemInstance;
+    private Transform? _leftHandParent;
+    private Transform? _rightHandParent;
+    private GameObject? _leftItemInstance;
+    private GameObject? _rightItemInstance;
 
     /// <summary>
     /// Binds this equipment manager to a player state receiver, allowing it to react to changes in the player's held items.
@@ -18,14 +18,14 @@ public class PlayerEquipmentManager : MonoBehaviour
     /// <param name="receiver">The player state receiver to bind to.</param>
     public void BindToReceiver(PlayerStateReceiver receiver)
     {
-        // TODO: CORRERERERECT
-        _leftHandParent = TransformUtils.FindChildRecursive(transform, "Item_Hand_Left");
+        // TODO: Implement correct Handling if not found
+        _leftHandParent = TransformUtils.FindChildRecursive(transform, "Item_Hand_Left") ?? transform;
         if (_leftHandParent == null)
         {
             LogManager.Net.Error("Left hand parent not found.");
         }
 
-        _rightHandParent = TransformUtils.FindChildRecursive(transform, "Item_Hand_Right");
+        _rightHandParent = TransformUtils.FindChildRecursive(transform, "Item_Hand_Right") ?? transform;
         if (_rightHandParent == null)
         {
             LogManager.Error("Right hand parent not found.");

@@ -5,4 +5,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\WhiteKnuckleMP.Framework\WhiteKnuckleMP.Framework.csproj" />
+    </ItemGroup>
+
 </Project>

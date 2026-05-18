@@ -19,12 +19,9 @@ public class WkMultiplayer : BaseUnityPlugin
 
     public static WKLibAPI LibAPI = WKLibAPI.Create(NAME, GUID);
     
-    private bool loaded = false;
+    private bool _loaded;
 
-    private CommandManager commandManager;
-
-    private NetworkManager gMan;
-    
+    private CommandManager _commandManager;
     
     
 
@@ -33,16 +30,21 @@ public class WkMultiplayer : BaseUnityPlugin
         
         // Windows
         LibAPI.AddWindow(WindowDeclarations.MainWin);
+        LibAPI.AddWindow(WindowDeclarations.JoinHostWin);
         
         // Mod List Buttons
         LibAPI.AddToModList(new WKModTab());
         
         
         LogManager.Init(Logger);
+        
+        GameObject engine = new GameObject("WhiteKnuckleMP_Engine");
+        DontDestroyOnLoad(engine);
 
-        GameObject gmObj = new GameObject("MultiplayerManager");
-        DontDestroyOnLoad(gmObj);
-        gMan = gmObj.AddComponent<NetworkManager>();
+        engine.AddComponent<StateManager>();
+        engine.AddComponent<NetworkManager>();
+        engine.AddComponent<PlayerManager>();
+        engine.AddComponent<LobbyManager>();
         
         
         SceneManager.sceneLoaded += OnSceneLoad;
@@ -59,13 +61,13 @@ public class WkMultiplayer : BaseUnityPlugin
             return; 
         }
 
-        switch (loaded)
+        switch (_loaded)
         {
             case false when scene.name == "Game-Main":
-                commandManager = new CommandManager(gMan);
+                _commandManager = new CommandManager(NetworkManager.Instance);
                     
                 AddCommands();
-                loaded = true;
+                _loaded = true;
                 break;
                     
             case true when scene.name == "Game-Main":
@@ -76,16 +78,16 @@ public class WkMultiplayer : BaseUnityPlugin
 
     private void AddCommands()
     {
-        if (commandManager == null)
+        if (_commandManager == null)
         {
             LogManager.Error("Cannot add commands - CommandManager is null");
             return;
         }
         
         // Add commands to CommandConsole
-        CommandConsole.AddCommand("host", commandManager.HandleLocalHostCommand, false);
-        CommandConsole.AddCommand("join", commandManager.HandleLocalJoinCommand, false);
-        CommandConsole.AddCommand("disconnect", commandManager.HandleDisconnectCommand, false);
+        CommandConsole.AddCommand("host", _commandManager.HandleLocalHostCommand, false);
+        CommandConsole.AddCommand("join", _commandManager.HandleLocalJoinCommand, false);
+        CommandConsole.AddCommand("disconnect", _commandManager.HandleDisconnectCommand, false);
         
         LogManager.Info("Commands registered successfully");
     }

@@ -13,6 +13,11 @@ public class WKModTab : WKLib.API.UI.ModTab
         {
             WindowDeclarations.MainWin.isOpen = true;
         }
+
+        if (gui.Button("Lobby Creator"))
+        {
+            WindowDeclarations.JoinHostWin.isOpen = true;
+        }
     }
 
 }

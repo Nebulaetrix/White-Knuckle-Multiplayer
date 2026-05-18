@@ -8,20 +8,32 @@ namespace WhiteKnuckleMP.Framework.Managers;
 
 public class NetworkManager : MonoBehaviour
 {
-    public static NetworkManager Instance;
+    public static NetworkManager Instance = null!;
 
-    public bool IsServer => Server.IsRunning;
+    public bool IsServer => Server?.IsRunning ?? false;
 
-    public Server Server { get; private set; }
-    public Client Client { get; private set; }
+    public Server Server { get; private set; } = null!;
+    public Client Client { get; private set; } = null!;
+
+    public static ushort LocalClientId => Instance.Client.Id;
     
     // Dummy
-    private GameObject dummyPrefab;
+    private GameObject dummyPrefab = null!;
     
 
+    /// <summary>
+    /// Initializes the NetworkManager instance.
+    /// </summary>
     private void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         Instance = this;
+        DontDestroyOnLoad(gameObject);
         
         RiptideLogger.Initialize(Debug.Log, Debug.Log, Debug.LogWarning, Debug.LogError, false);
 
@@ -29,6 +41,7 @@ public class NetworkManager : MonoBehaviour
         Client = new Client();
 
         Client.Connected += OnJoinedServer;
+        Client.ConnectionFailed += OnClientConnectionFailed;
         Server.ClientConnected += OnServerClientConnected;
     }
 
@@ -69,9 +82,24 @@ public class NetworkManager : MonoBehaviour
         Client.Connect($"{ip}:{port}");
     }
 
+    public void StartLanHost(ushort port)
+    {
+        Host(port: port);
+    }
+
+    public void ConnectToLanHost(string ip, ushort port)
+    {
+        Join(ip, port);
+    }
+    
     private void OnJoinedServer(object sender, EventArgs e)
     {
-        LogManager.Net.Info("Joined server as client!");
+        LogManager.Client.Info("Client connected to server safely!");
+    }
+
+    private void OnClientConnectionFailed(object sender, ConnectionFailedEventArgs e)
+    {
+        LogManager.Client.Error($"Failed to connect, reason: {e.Reason}\n{e.Message}");
     }
 
     private void OnServerClientConnected(object sender, ServerConnectedEventArgs e)
@@ -82,5 +110,11 @@ public class NetworkManager : MonoBehaviour
     private void CreateDummyPrefab()
     {
         throw new NotImplementedException();
+    }
+
+    private void OnDestroy()
+    {
+        if (Server.IsRunning) Server.Stop();
+        if (Client.IsConnected) Client.Disconnect();
     }
 }

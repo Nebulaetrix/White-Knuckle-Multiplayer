@@ -24,6 +24,9 @@
 		<Reference Include="Assembly-CSharp" Private="False">
 			<HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Assembly-CSharp.dll</HintPath>
 		</Reference>
+		<Reference Include="ALINE" Private="False">
+			<HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/ALINE.dll</HintPath>
+		</Reference>
 		<Reference Include="ImuiBepInEx" Private="False">
 			<HintPath>$(MSBuildThisFileDirectory)Libs/ImuiBepInEx.dll</HintPath>
 		</Reference>

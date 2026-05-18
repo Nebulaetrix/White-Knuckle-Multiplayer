@@ -22,10 +22,11 @@ public class LobbyWindow : WKLibWindow
         
         if (!gui.BeginWindow("WKMP Lobbies", ref isOpen, new ImSize(600, 600), ImWindowFlag.None))
             return;
+        
     }
 
     public override void HandleInput(ImGui gui)
     {
-        throw new System.NotImplementedException();
+        /**/
     }
 }

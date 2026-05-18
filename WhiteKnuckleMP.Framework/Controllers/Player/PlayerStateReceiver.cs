@@ -13,8 +13,8 @@ public class PlayerStateReceiver : MonoBehaviour
     private string _currentLeftItem = "None";
     private string _currentRightItem = "None";
 
-    public event Action<string> OnLeftItemChanged;
-    public event Action<string> OnRightItemChanged;
+    public event Action<string>? OnLeftItemChanged;
+    public event Action<string>? OnRightItemChanged;
 
     public void Initialize()
     {

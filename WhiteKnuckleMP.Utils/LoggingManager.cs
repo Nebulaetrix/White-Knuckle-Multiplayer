@@ -37,6 +37,10 @@ namespace WhiteKnuckleMP.Utils
     ///         <term>UI</term>
     ///         <description>prefixes messages with [UI]</description>
     ///     </item>
+    ///     <item>
+    ///         <term>StateManager</term>
+    ///         <description>prefixes messages with [StateManager]</description> 
+    ///     </item>
     /// </list>
     ///
     /// <para>
@@ -154,6 +158,19 @@ namespace WhiteKnuckleMP.Utils
             }
             public static void Warn(string message) => _baseLogger?.LogWarning($"[UI] {message}");
             public static void Error(string message) => _baseLogger?.LogError($"[UI] {message}");
+        }
+        
+        /// <summary>StateManager-context logging.</summary>
+        public static class StateManager
+        {
+            public static void Info(string message) => _baseLogger?.LogInfo($"[StateManager] {message}");
+            public static void Debug(string message)
+            {
+                if (DebugEnabled)
+                    _baseLogger?.LogDebug($"[StateManager] {message}");
+            }
+            public static void Warn(string message) => _baseLogger?.LogWarning($"[StateManager] {message}");
+            public static void Error(string message) => _baseLogger?.LogError($"[StateManager] {message}");
         }
     }
 }

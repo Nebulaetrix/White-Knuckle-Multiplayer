@@ -12,9 +12,9 @@ public class PlayerController : MonoBehaviour
     public bool IsLocal { get; private set; }
     
     // Component Links
-    public PlayerStateSender Sender { get; private set; }
-    public PlayerStateReceiver Receiver { get; private set; }
-    public PlayerEquipmentManager Equipment { get; private set; }
+    public PlayerStateSender? Sender { get; private set; }
+    public PlayerStateReceiver? Receiver { get; private set; }
+    public PlayerEquipmentManager? Equipment { get; private set; }
 
     /// <summary>
     /// Called by the PlayerManager when this player is spawned into the world.
