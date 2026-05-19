@@ -1,12 +1,24 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using WhiteKnuckleMP.Networking;
 using WhiteKnuckleMP.Utils;
 
 namespace WhiteKnuckleMP.Framework.Managers;
 
+public struct LobbyPlayerInfo
+{
+    public ushort NetId;
+    public string Username;
+    public ulong SteamId;
+}
+
 public class LobbyManager : MonoBehaviour
 {
     public static LobbyManager Instance { get; private set; } = null!;
+
+    public List<LobbyPlayerInfo> ConnectedLobbyPlayers { get; private set; } = [];
 
     public enum NetworkType
     {
@@ -14,7 +26,7 @@ public class LobbyManager : MonoBehaviour
         LAN,
         Steam
     }
-    
+
     public NetworkType CurrentNetworkType { get; private set; } = NetworkType.LAN;
     public string CurrentLobbyId { get; private set; } = string.Empty;
 
@@ -28,6 +40,22 @@ public class LobbyManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        
+        SceneManager.sceneLoaded += SceneLoaded;
+    }
+
+    private void SceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
+    {
+        if (scene.name == "Game-Main")
+            NotifyServerIAmReady();
+    }
+
+    public void NotifyServerIAmReady()
+    {
+        using (var packet = new NetworkPacket(MessageIds.ClientReady))
+        {
+            NetworkManager.Instance.Client.Send(packet.RawMessage);
+        }
     }
 
     public void CreateLobby(NetworkType type)
@@ -39,7 +67,6 @@ public class LobbyManager : MonoBehaviour
         {
             CurrentLobbyId = "localhost";
             NetworkManager.Instance.StartLanHost(7777);
-            StateManager.Instance.TransitionTo(StateManager.State.InLobby);
         }
         else
         {
@@ -61,5 +88,37 @@ public class LobbyManager : MonoBehaviour
         {
             LogManager.Framework.Warn("Steam lobbies are not fully implemented yet!");
         }
+    }
+
+    public void AddPlayerToLobby(ushort netId, string username, ulong steamId)
+    {
+        if (ConnectedLobbyPlayers.Exists(p => p.NetId == netId)) return;
+
+        var newPlayer = new LobbyPlayerInfo
+        {
+            NetId = netId,
+            Username = username,
+            SteamId = steamId
+        };
+        
+        ConnectedLobbyPlayers.Add(newPlayer);
+        
+        LogManager.Framework.Info($"Added {username} to the lobby list. Total players: {ConnectedLobbyPlayers.Count}");
+    }
+
+    public void RemovePlayerFromLobby(ushort netId)
+    {
+        ConnectedLobbyPlayers.RemoveAll(p => p.NetId == netId);
+        LogManager.Framework.Info($"Removed Player ID {netId} from the lobby list.");
+    }
+    
+    public int GetClientId()
+    {
+        if (NetworkManager.Instance.Client.IsConnected)
+        {
+            return NetworkManager.Instance.Client.Id;
+        }
+
+        return -1;
     }
 }

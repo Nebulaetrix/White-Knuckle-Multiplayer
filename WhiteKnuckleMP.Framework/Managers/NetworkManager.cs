@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Riptide;
 using Riptide.Utils;
 using UnityEngine;
@@ -16,9 +17,6 @@ public class NetworkManager : MonoBehaviour
     public Client Client { get; private set; } = null!;
 
     public static ushort LocalClientId => Instance.Client.Id;
-    
-    // Dummy
-    private GameObject dummyPrefab = null!;
     
 
     /// <summary>
@@ -39,12 +37,11 @@ public class NetworkManager : MonoBehaviour
 
         Server = new Server();
         Client = new Client();
-
+        
         Client.Connected += OnJoinedServer;
         Client.ConnectionFailed += OnClientConnectionFailed;
         Server.ClientConnected += OnServerClientConnected;
     }
-
 
     private void FixedUpdate()
     {
@@ -95,6 +92,8 @@ public class NetworkManager : MonoBehaviour
     private void OnJoinedServer(object sender, EventArgs e)
     {
         LogManager.Client.Info("Client connected to server safely!");
+        
+        StateManager.Instance.TransitionTo(StateManager.State.InLobby);
     }
 
     private void OnClientConnectionFailed(object sender, ConnectionFailedEventArgs e)
@@ -104,12 +103,9 @@ public class NetworkManager : MonoBehaviour
 
     private void OnServerClientConnected(object sender, ServerConnectedEventArgs e)
     {
-        throw new NotImplementedException();
-    }
-    
-    private void CreateDummyPrefab()
-    {
-        throw new NotImplementedException();
+        LogManager.Server.Info($"A new client has joined! ID: {e.Client.Id}");
+
+        LobbyManager.Instance.AddPlayerToLobby(e.Client.Id, $"Player {e.Client.Id}", 0);
     }
 
     private void OnDestroy()

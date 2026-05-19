@@ -21,6 +21,8 @@ public class WkMultiplayer : BaseUnityPlugin
     
     private bool _loaded;
 
+    private bool _engineSetup;
+    
     private CommandManager _commandManager;
     
     
@@ -38,14 +40,6 @@ public class WkMultiplayer : BaseUnityPlugin
         
         LogManager.Init(Logger);
         
-        GameObject engine = new GameObject("WhiteKnuckleMP_Engine");
-        DontDestroyOnLoad(engine);
-
-        engine.AddComponent<StateManager>();
-        engine.AddComponent<NetworkManager>();
-        engine.AddComponent<PlayerManager>();
-        engine.AddComponent<LobbyManager>();
-        
         
         SceneManager.sceneLoaded += OnSceneLoad;
 
@@ -57,8 +51,14 @@ public class WkMultiplayer : BaseUnityPlugin
         // ADDED CASE FOR "Intro" SCENE
         if (scene.name == "Intro")
         {
-            SceneManager.LoadScene("Main-Menu");
+            // ? why
+            // SceneManager.LoadScene("Main-Menu");
             return; 
+        } 
+        if (scene.name == "Main-Menu")
+        {
+            if (!_engineSetup)
+                SetupEngine();
         }
 
         switch (_loaded)
@@ -92,6 +92,20 @@ public class WkMultiplayer : BaseUnityPlugin
         LogManager.Info("Commands registered successfully");
     }
 
+    private void SetupEngine()
+    {
+        LogManager.Info("Setting up WhiteKnuckleMP Engine...");
+        GameObject engine = new GameObject("WhiteKnuckleMP_Engine");
+        DontDestroyOnLoad(engine);
+
+        engine.AddComponent<StateManager>();
+        engine.AddComponent<NetworkManager>();
+        engine.AddComponent<PlayerManager>();
+        engine.AddComponent<LobbyManager>();
+        LogManager.Info("WhiteKnuckleMP Engine was successfully setup!");
+        _engineSetup = true;
+    }
+    
     private void OnDisable()
     {
         LibAPI.Destroy();

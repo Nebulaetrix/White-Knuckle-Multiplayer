@@ -1,3 +1,4 @@
+using Riptide;
 using UnityEngine;
 using WhiteKnuckleMP.Framework.Managers;
 using WhiteKnuckleMP.Networking;
@@ -31,12 +32,12 @@ public class PlayerStateSender : MonoBehaviour
 
         var playerSyncMessage = new PlayerSyncMessage(_netID, transform.position, transform.rotation, leftItem, rightItem);
         
-        using (var packet = new NetworkPacket((ushort)MessageId.PlayerSync))
+        using (var packet = new NetworkPacket(MessageIds.PlayerSync, MessageSendMode.Unreliable))
         {
             playerSyncMessage.WriteTo(packet);
 
             // send over network
-            NetworkManager.Instance.Client?.Send(packet.RawMessage);
+            NetworkManager.Instance.Client.Send(packet.RawMessage);
         }
     }
 

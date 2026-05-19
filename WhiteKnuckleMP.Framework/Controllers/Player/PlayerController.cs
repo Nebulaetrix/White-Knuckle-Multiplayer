@@ -26,7 +26,7 @@ public class PlayerController : MonoBehaviour
         Username = username;
         IsLocal = isLocal;
 
-        gameObject.name = $"NetworkPlayer_{NetID}";
+        gameObject.name = isLocal ? $"LocalPlayer_NetID_{netId}" : $"RemotePlayer_{username}_NetID_{netId}";
 
         // Visual Item Manager
         Equipment = GetComponent<PlayerEquipmentManager>();
@@ -34,17 +34,17 @@ public class PlayerController : MonoBehaviour
         if (IsLocal)
         {
             // Local Player gets sender, they're NOT a receiver
-            Sender = gameObject.AddComponent<PlayerStateSender>();
+            Sender = gameObject.GetComponent<PlayerStateSender>() ?? gameObject.AddComponent<PlayerStateSender>();
             // Initialize it with NetID
             Sender.Initialize(netId);
         }
         else
         {
             // Remote Player gets Receiver, as they do not need to send anything
-            Receiver = gameObject.AddComponent<PlayerStateReceiver>();
+            Receiver = gameObject.GetComponent<PlayerStateReceiver>() ?? gameObject.AddComponent<PlayerStateReceiver>();            
             // Initialize it with hand references and etc.
             // TODO: Add the hand sync
-            Receiver.Initialize(/* Hand References Will go here */);
+            Receiver.Initialize(netId);
             
             Equipment.BindToReceiver(Receiver);
         }

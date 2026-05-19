@@ -5,11 +5,11 @@ namespace WhiteKnuckleMP.Networking
     ///
     /// All message ID's below and including 100 are reserved for WKMP
     /// </summary>
-    public enum MessageId : ushort
+    public static class MessageIds
     {
-        SpawnDummy,
-        DestroyDummy,
-        PlayerSync,
+        public const ushort SpawnPlayer = 0;
+        public const ushort ClientReady = 1;
+        public const ushort PlayerSync = 2;
     }
 
 }

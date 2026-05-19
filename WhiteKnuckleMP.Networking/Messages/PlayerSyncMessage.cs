@@ -4,7 +4,7 @@ namespace WhiteKnuckleMP.Networking.Messages;
 
 public readonly struct PlayerSyncMessage : INetworkMessage
 {
-    public ushort MessageId => (ushort)Networking.MessageId.PlayerSync;
+    public ushort MessageId => (ushort)MessageIds.PlayerSync;
 
     public ushort NetId { get; }
     public Vector3 Position { get; }

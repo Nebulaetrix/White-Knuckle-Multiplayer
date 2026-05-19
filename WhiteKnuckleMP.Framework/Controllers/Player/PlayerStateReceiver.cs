@@ -5,6 +5,8 @@ namespace WhiteKnuckleMP.Framework.Controllers.Player;
 
 public class PlayerStateReceiver : MonoBehaviour
 {
+    private ushort _netID;
+    
     private Vector3 _targetPosition;
     private Quaternion _targetRotation;
     private const float LerpSpeed = 5f;
@@ -16,8 +18,9 @@ public class PlayerStateReceiver : MonoBehaviour
     public event Action<string>? OnLeftItemChanged;
     public event Action<string>? OnRightItemChanged;
 
-    public void Initialize()
+    public void Initialize(ushort netId)
     {
+        _netID = netId;
         // TODO: Implement back hand sync
         _targetPosition = transform.position;
         _targetRotation = transform.rotation;

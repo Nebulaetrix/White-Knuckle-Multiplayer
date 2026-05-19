@@ -12,6 +12,8 @@ public class JoinHostWindow : WKLibWindow
     private string _targetIp = "127.0.0.1";
     
     private static ImDropdownPreviewType dropdownPreview;
+
+    private string _netId = string.Empty;
     
     public JoinHostWindow()
     {
@@ -41,14 +43,30 @@ public class JoinHostWindow : WKLibWindow
         {
             LobbyManager.Instance.JoinLobby(_selectedLobbyType, _targetIp);
         }
+
+        if (NetworkManager.Instance.Client.IsConnected && _netId == string.Empty)
+        {
+            _netId = NetworkManager.Instance.Client.Id.ToString();
+        }
         
         gui.Separator("Info");
         
         gui.Text($"Lobby ID: {LobbyManager.Instance.CurrentLobbyId}");
-        gui.Text($"Net ID: no clue");
+        gui.Text($"Net ID: {_netId}");
+        
+        var grid = gui.BeginGrid(2, gui.GetRowHeight());
+        foreach (var player in LobbyManager.Instance.ConnectedLobbyPlayers)
+        {
+            DrawLobbyMember(gui, player.NetId, player.Username, ref grid);
+        }
+        gui.EndGrid(grid);
         
         gui.EndWindow();
-        //what the fuck
+    }
+
+    private static void DrawLobbyMember(ImGui gui, ushort netId, string username, ref ImGridState grid)
+    {
+        gui.TextAutoSize($"Player: {username}\nID: {netId}", gui.GridNextCell(ref grid));
     }
 
     public override void HandleInput(ImGui gui)
