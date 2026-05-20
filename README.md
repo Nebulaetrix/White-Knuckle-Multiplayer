@@ -35,9 +35,11 @@ To build the mod, run:
 ```sh
 dotnet publish -c Release
 ```
+or use the build tools in your IDE.
 
 ## Running the Project
 1. Copy the built mod and all its DLL files to your BepInEx plugins directory.
+   2. **Do the above if you set `CopyToBepInExPluginsDir` to `false`**
 2. Start **White Knuckle**.
 
 ## Contributing
