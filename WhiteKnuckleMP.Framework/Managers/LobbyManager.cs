@@ -30,6 +30,9 @@ public class LobbyManager : MonoBehaviour
     public NetworkType CurrentNetworkType { get; private set; } = NetworkType.LAN;
     public string CurrentLobbyId { get; private set; } = string.Empty;
 
+    private bool _isGameMainLoaded;
+    private bool _hasSentClientReady;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -47,15 +50,43 @@ public class LobbyManager : MonoBehaviour
     private void SceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
     {
         if (scene.name == "Game-Main")
-            NotifyServerIAmReady();
+        {
+            _isGameMainLoaded = true;
+            TryNotifyServerIAmReady();
+        }
+        else
+        {
+            ResetReadyState();
+        }
+
+
     }
 
+    public void TryNotifyServerIAmReady()
+    {
+        if (_hasSentClientReady)
+            return;
+        if (!_isGameMainLoaded)
+            return;
+        if (!NetworkManager.Instance.Client.IsConnected)
+        {
+            LogManager.Framework.Warn("Cannot send Clientready: client is not connected.");
+            return;
+        }
+        
+        NotifyServerIAmReady();
+        _hasSentClientReady = true;
+    }
     public void NotifyServerIAmReady()
     {
-        using (var packet = new NetworkPacket(MessageIds.ClientReady))
+        if (!NetworkManager.Instance.Client.IsConnected)
         {
-            NetworkManager.Instance.Client.Send(packet.RawMessage);
+            LogManager.Framework.Warn("Cannot send Clientready: client is not connected.");
+            return;
         }
+
+        using var packet = new NetworkPacket(MessageIds.ClientReady);
+        NetworkManager.Instance.Client.Send(packet.RawMessage);
     }
 
     public void CreateLobby(NetworkType type)
@@ -120,5 +151,11 @@ public class LobbyManager : MonoBehaviour
         }
 
         return -1;
+    }
+
+    public void ResetReadyState()
+    {
+        _isGameMainLoaded = false;
+        _hasSentClientReady = false;
     }
 }

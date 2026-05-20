@@ -129,6 +129,15 @@ public class PlayerManager : MonoBehaviour
     }
 
     #region Message Handlers
+
+    [MessageHandler(MessageIds.PlayerSync)]
+    public static void HandlePlayerSync(ushort fromClientId, Riptide.Message message)
+    {
+        if (NetworkManager.Instance.IsServer)
+        {
+            NetworkManager.Instance.Server.SendToAll(message);
+        }
+    }
     
     [MessageHandler(MessageIds.PlayerSync)]
     public static void HandlePlayerSync(Riptide.Message message)
@@ -164,7 +173,7 @@ public class PlayerManager : MonoBehaviour
         string username = string.IsNullOrEmpty(newPlayerInfo.Username) ? $"Player {fromClientId}" : newPlayerInfo.Username;
         
         // Tell Everyone including the new client to spawn this new client
-        var spawnNewGuyMsg = new SpawnPlayerMessage(fromClientId, newPlayerInfo.Username);
+        var spawnNewGuyMsg = new SpawnPlayerMessage(fromClientId, username);
         using (var p1 = new NetworkPacket(spawnNewGuyMsg.MessageId, Riptide.MessageSendMode.Reliable))
         {
             spawnNewGuyMsg.WriteTo(p1);

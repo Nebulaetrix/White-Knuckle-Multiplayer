@@ -30,6 +30,10 @@ public class PlayerController : MonoBehaviour
 
         // Visual Item Manager
         Equipment = GetComponent<PlayerEquipmentManager>();
+        if (Equipment == null) 
+        { 
+            Equipment = gameObject.AddComponent<PlayerEquipmentManager>(); 
+        }
 
         if (IsLocal)
         {

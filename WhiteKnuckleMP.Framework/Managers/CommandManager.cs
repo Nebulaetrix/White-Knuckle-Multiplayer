@@ -87,6 +87,7 @@ public class CommandManager
         {
             _netManager.Server.Stop();
         }
+        LobbyManager.Instance.ResetReadyState();
         CommandConsole.Log("Disconnected from WKNetworking server");
     }
     

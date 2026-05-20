@@ -40,6 +40,7 @@ public class NetworkManager : MonoBehaviour
         
         Client.Connected += OnJoinedServer;
         Client.ConnectionFailed += OnClientConnectionFailed;
+        Client.Disconnected += OnClientDisconnected;
         Server.ClientConnected += OnServerClientConnected;
     }
 
@@ -94,6 +95,7 @@ public class NetworkManager : MonoBehaviour
         LogManager.Client.Info("Client connected to server safely!");
         
         StateManager.Instance.TransitionTo(StateManager.State.InLobby);
+        LobbyManager.Instance.TryNotifyServerIAmReady();
     }
 
     private void OnClientConnectionFailed(object sender, ConnectionFailedEventArgs e)
@@ -101,10 +103,17 @@ public class NetworkManager : MonoBehaviour
         LogManager.Client.Error($"Failed to connect, reason: {e.Reason}\n{e.Message}");
     }
 
+    private void OnClientDisconnected(object sender, DisconnectedEventArgs e)
+    {
+        LogManager.Client.Info($"Client disconnected from server. Reason: {e.Reason}");
+        LobbyManager.Instance.ResetReadyState();
+    }
+
     private void OnServerClientConnected(object sender, ServerConnectedEventArgs e)
     {
+        if (e.Client.Id == LocalClientId) return;
         LogManager.Server.Info($"A new client has joined! ID: {e.Client.Id}");
-
+        
         LobbyManager.Instance.AddPlayerToLobby(e.Client.Id, $"Player {e.Client.Id}", 0);
     }
 
