@@ -1,0 +1,59 @@
+<Project>
+	<Import Project="$(MSBuildThisFileDirectory)Directory.Build.props.user"
+			Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.props.user')" />
+	
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<LangVersion>14.0</LangVersion>
+		<RestoreAdditionalProjectSources>
+			https://api.nuget.org/v3/index.json;
+			https://nuget.bepinex.dev/v3/index.json;
+			https://nuget.samboy.dev/v3/index.json
+		</RestoreAdditionalProjectSources>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+		<PackageReference Include="BepInEx.Core" Version="5.*" />
+		<PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
+		<PackageReference Include="UnityEngine.Modules" Version="2022.3.32" IncludeAssets="compile" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="Assembly-CSharp" Private="False">
+			<HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Assembly-CSharp.dll</HintPath>
+		</Reference>
+		<Reference Include="ALINE" Private="False">
+			<HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/ALINE.dll</HintPath>
+		</Reference>
+		<Reference Include="ImuiBepInEx" Private="False">
+			<HintPath>$(MSBuildThisFileDirectory)Libs/ImuiBepInEx.dll</HintPath>
+		</Reference>
+		<Reference Include="RiptideNetworking">
+			<HintPath>$(MSBuildThisFileDirectory)Libs/RiptideNetworking.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Collections" Private="False">
+			<HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Unity.Collections.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Mathematics" Private="False">
+			<HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Unity.Mathematics.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.Postprocessing.Runtime" Private="False">
+			<HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/Unity.Postprocessing.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.CoreModule" Private="False">
+			<HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.PhysicsModule" Private="False">
+			<HintPath>$(WhiteKnuckleDir)White Knuckle_Data/Managed/UnityEngine.PhysicsModule.dll</HintPath>
+		</Reference>
+		<Reference Include="WKLib" Private="False">
+			<HintPath>$(MSBuildThisFileDirectory)Libs/WKLib.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
+		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
+	</ItemGroup>
+</Project>
