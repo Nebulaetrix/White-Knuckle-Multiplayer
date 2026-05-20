@@ -34,7 +34,8 @@ public class StateManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Request a transition to a new game state.
+    /// Request a transition to a new state.
+    /// <param name="newState">The target state to transition to.</param>
     /// </summary>
     public void TransitionTo(State newState)
     {

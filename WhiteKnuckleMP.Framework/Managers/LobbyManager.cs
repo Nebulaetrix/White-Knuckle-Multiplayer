@@ -58,10 +58,11 @@ public class LobbyManager : MonoBehaviour
         {
             ResetReadyState();
         }
-
-
     }
 
+    /// <summary>
+    /// Tries to notify the server that the client is ready.
+    /// </summary>
     public void TryNotifyServerIAmReady()
     {
         if (_hasSentClientReady)
@@ -77,6 +78,7 @@ public class LobbyManager : MonoBehaviour
         NotifyServerIAmReady();
         _hasSentClientReady = true;
     }
+    
     public void NotifyServerIAmReady()
     {
         if (!NetworkManager.Instance.Client.IsConnected)
@@ -89,6 +91,10 @@ public class LobbyManager : MonoBehaviour
         NetworkManager.Instance.Client.Send(packet.RawMessage);
     }
 
+    /// <summary>
+    /// Creates a lobby of the specified network type.
+    /// </summary>
+    /// <param name="type">The type of network to create the lobby for.</param>
     public void CreateLobby(NetworkType type)
     {
         CurrentNetworkType = type;
@@ -105,6 +111,11 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Joins a lobby of the specified network type using the provided connection string.
+    /// </summary>
+    /// <param name="type">The type of network to join the lobby for.</param>
+    /// <param name="connectionString">The connection string for the lobby.</param>
     public void JoinLobby(NetworkType type, string connectionString)
     {
         CurrentNetworkType = type;
@@ -121,6 +132,12 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Adds a player to the lobby.
+    /// </summary>
+    /// <param name="netId">The network ID of the player.</param>
+    /// <param name="username">The username of the player.</param>
+    /// <param name="steamId">The Steam ID of the player.</param>
     public void AddPlayerToLobby(ushort netId, string username, ulong steamId)
     {
         if (ConnectedLobbyPlayers.Exists(p => p.NetId == netId)) return;
@@ -137,6 +154,10 @@ public class LobbyManager : MonoBehaviour
         LogManager.Framework.Info($"Added {username} to the lobby list. Total players: {ConnectedLobbyPlayers.Count}");
     }
 
+    /// <summary>
+    /// Removes a player from the lobby by their network ID.
+    /// </summary>
+    /// <param name="netId">The network ID of the player to remove.</param>
     public void RemovePlayerFromLobby(ushort netId)
     {
         ConnectedLobbyPlayers.RemoveAll(p => p.NetId == netId);
@@ -153,6 +174,9 @@ public class LobbyManager : MonoBehaviour
         return -1;
     }
 
+    /// <summary>
+    /// Resets the ready state of the client.
+    /// </summary>
     public void ResetReadyState()
     {
         _isGameMainLoaded = false;

@@ -19,6 +19,10 @@ public class PlayerController : MonoBehaviour
     /// <summary>
     /// Called by the PlayerManager when this player is spawned into the world.
     /// </summary>
+    /// <param name="netId">The network ID of the player.</param>
+    /// <param name="steamId">The Steam ID of the player.</param>
+    /// <param name="username">The username of the player.</param>
+    /// <param name="isLocal">True if this is the local player, false otherwise.</param>
     public void Initialize(ushort netId, ulong steamId, string username, bool isLocal)
     {
         NetID = netId;

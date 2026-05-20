@@ -66,6 +66,12 @@ public class PlayerManager : MonoBehaviour
         LogManager.Framework.Info("Hollow remote player prefab successfully created!");
     }
     
+    /// <summary>
+    /// Handles state changes for the PlayerManager.
+    /// If the new state is Disconnected, it clears all networked players and logs a message.
+    /// </summary>
+    /// <param name="oldState">The previous state.</param>
+    /// <param name="newState">The current state.</param>
     private void HandleStateChanged(StateManager.State oldState, StateManager.State newState)
     {
         if (newState == StateManager.State.Disconnected)
@@ -75,7 +81,7 @@ public class PlayerManager : MonoBehaviour
                 if (player != null) Destroy(player.gameObject);
             }
             ActivePlayers.Clear();
-            LogManager.Framework.Info("Cleared all networked player due to disconnection.");
+            LogManager.Framework.Info("Cleared all networked players due to disconnection.");
         }
     }
 

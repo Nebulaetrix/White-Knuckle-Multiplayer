@@ -11,7 +11,7 @@ public class NetworkManager : MonoBehaviour
 {
     public static NetworkManager Instance = null!;
 
-    public bool IsServer => Server?.IsRunning ?? false;
+    public bool IsServer => Server.IsRunning;
 
     public Server Server { get; private set; } = null!;
     public Client Client { get; private set; } = null!;
