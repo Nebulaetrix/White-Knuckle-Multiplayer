@@ -16,6 +16,10 @@ public class PlayerController : MonoBehaviour
     public PlayerStateReceiver? Receiver { get; private set; }
     public PlayerEquipmentManager? Equipment { get; private set; }
 
+    // Hand Data
+    public GameObject LeftHand { get; private set; }
+    public GameObject RightHand { get; private set; }
+
     /// <summary>
     /// Called by the PlayerManager when this player is spawned into the world.
     /// </summary>
@@ -23,12 +27,16 @@ public class PlayerController : MonoBehaviour
     /// <param name="steamId">The Steam ID of the player.</param>
     /// <param name="username">The username of the player.</param>
     /// <param name="isLocal">True if this is the local player, false otherwise.</param>
-    public void Initialize(ushort netId, ulong steamId, string username, bool isLocal)
+    /// <param name="leftHand">The GameObject of the left hand</param>
+    /// <param name="rightHand">The GameObject of the right hand</param>
+    public void Initialize(ushort netId, ulong steamId, string username, bool isLocal, GameObject leftHand, GameObject rightHand)
     {
         NetID = netId;
         SteamID = steamId;
         Username = username;
         IsLocal = isLocal;
+        LeftHand = leftHand;
+        RightHand = rightHand;
 
         gameObject.name = isLocal ? $"LocalPlayer_NetID_{netId}" : $"RemotePlayer_{username}_NetID_{netId}";
 
@@ -44,7 +52,7 @@ public class PlayerController : MonoBehaviour
             // Local Player gets sender, they're NOT a receiver
             Sender = gameObject.GetComponent<PlayerStateSender>() ?? gameObject.AddComponent<PlayerStateSender>();
             // Initialize it with NetID
-            Sender.Initialize(netId);
+            Sender.Initialize(netId, leftHand, rightHand);
         }
         else
         {
@@ -52,7 +60,7 @@ public class PlayerController : MonoBehaviour
             Receiver = gameObject.GetComponent<PlayerStateReceiver>() ?? gameObject.AddComponent<PlayerStateReceiver>();            
             // Initialize it with hand references and etc.
             // TODO: Add the hand sync
-            Receiver.Initialize(netId);
+            Receiver.Initialize(netId, leftHand, rightHand);
             
             Equipment.BindToReceiver(Receiver);
         }

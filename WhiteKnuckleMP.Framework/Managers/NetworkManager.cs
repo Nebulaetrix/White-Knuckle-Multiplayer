@@ -18,7 +18,13 @@ public class NetworkManager : MonoBehaviour
 
     public static ushort LocalClientId => Instance.Client.Id;
     
+    // Target network tick rate (60 ticks per second)
+    private const float TargetTickRate = 60f;
+    private const float TickInterval = 1f / TargetTickRate;
+    private float _tickTimer = 0f;
 
+    
+    
     /// <summary>
     /// Initializes the NetworkManager instance.
     /// </summary>
@@ -35,19 +41,32 @@ public class NetworkManager : MonoBehaviour
         
         RiptideLogger.Initialize(Debug.Log, Debug.Log, Debug.LogWarning, Debug.LogError, false);
 
-        Server = new Server();
-        Client = new Client();
-        
+        Server = new Server
+        {
+            TimeoutTime = 20000
+        };
+        Client = new Client
+        {
+            TimeoutTime = 20000
+        };
+
         Client.Connected += OnJoinedServer;
         Client.ConnectionFailed += OnClientConnectionFailed;
         Client.Disconnected += OnClientDisconnected;
         Server.ClientConnected += OnServerClientConnected;
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
-        Server.Update();
-        Client.Update();
+        _tickTimer += Time.unscaledDeltaTime;
+
+        while (_tickTimer >= TickInterval)
+        {
+            Server.Update();
+            Client.Update();
+            
+            _tickTimer -= TickInterval;
+        }
     }
 
     private void OnApplicationQuit()

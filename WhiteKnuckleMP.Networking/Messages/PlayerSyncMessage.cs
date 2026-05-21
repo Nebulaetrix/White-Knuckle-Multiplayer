@@ -12,14 +12,19 @@ public readonly struct PlayerSyncMessage : INetworkMessage
     public string LeftItemName { get; }
     public string RightItemName { get; }
 
+    public Vector3 LeftHandPosition { get; }
+    public Vector3 RightHandPosition { get; }
+    
     public PlayerSyncMessage(ushort netId, Vector3 position, Quaternion rotation, string leftItemName,
-        string rightItemName)
+        string rightItemName, Vector3 leftHandPosition, Vector3 rightHandPosition)
     {
         NetId = netId;
         Position = position;
         Rotation = rotation;
         LeftItemName = leftItemName;
         RightItemName = rightItemName;
+        LeftHandPosition = leftHandPosition;
+        RightHandPosition = rightHandPosition;
     }
     
     public static PlayerSyncMessage FromPacket(NetworkPacket packet)
@@ -29,8 +34,10 @@ public readonly struct PlayerSyncMessage : INetworkMessage
         Quaternion rotation = packet.ReadQuaternion();
         string leftItemName = packet.ReadString();
         string rightItemName = packet.ReadString();
+        Vector3 leftHandPosition = packet.ReadVector3();
+        Vector3 rightHandPosition = packet.ReadVector3();
 
-        return new PlayerSyncMessage(id, position, rotation, leftItemName, rightItemName);
+        return new PlayerSyncMessage(id, position, rotation, leftItemName, rightItemName, leftHandPosition, rightHandPosition);
     }
     
     public void WriteTo(NetworkPacket packet)
@@ -39,6 +46,8 @@ public readonly struct PlayerSyncMessage : INetworkMessage
             .Write(Position)
             .Write(Rotation)
             .Write(LeftItemName)
-            .Write(RightItemName);
+            .Write(RightItemName)
+            .Write(LeftHandPosition)
+            .Write(RightHandPosition);
     }
 }

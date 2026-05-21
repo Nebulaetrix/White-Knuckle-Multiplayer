@@ -65,6 +65,56 @@ public class PlayerManager : MonoBehaviour
         _hasCreatedPrefab = true;
         LogManager.Framework.Info("Hollow remote player prefab successfully created!");
     }
+
+    private static Dictionary<string, GameObject> CreatePrimitivePrefab(ushort netId, string username)
+    {
+        var primitiveGo = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        primitiveGo.name = $"RemotePlayer_{username}_{netId}";
+        DontDestroyOnLoad(primitiveGo);
+
+        var leftHand = CreatePrimitiveHand(primitiveGo,"LeftHand", Color.red);
+        var rightHand = CreatePrimitiveHand(primitiveGo,"RightHand", Color.blue);
+            
+        if (primitiveGo.TryGetComponent(out Collider capsuleCollider))
+        {
+            capsuleCollider.isTrigger = true;
+        }
+
+        if (primitiveGo.TryGetComponent(out Renderer renderer))
+        {
+            renderer.material.shader = Shader.Find("Dark Machine/SDHR_Base");
+            renderer.material.color = Color.cyan; // Fren
+        }
+
+        var obj = new Dictionary<string, GameObject>
+        {
+            ["body"] = primitiveGo,
+            ["leftHand"] = leftHand,
+            ["rightHand"] = rightHand
+        };
+
+        return obj;
+    }
+
+    private static GameObject CreatePrimitiveHand(GameObject parent, string handName, Color color)
+    {
+        var hand = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        hand.name = handName;
+        hand.transform.parent = parent.transform;
+
+        if (hand.TryGetComponent(out Collider capsuleCollider))
+        {
+            capsuleCollider.isTrigger = true;
+        }
+
+        if (hand.TryGetComponent(out Renderer renderer))
+        {
+            renderer.material.shader = Shader.Find("Dark Machine/SDHR_Base");
+            renderer.material.color = color;
+        }
+        
+        return hand;
+    }
     
     /// <summary>
     /// Handles state changes for the PlayerManager.
@@ -95,12 +145,15 @@ public class PlayerManager : MonoBehaviour
         {
             var localGo = GameObject.Find("CL_Player");
 
+            var leftHand = TransformUtils.FindChildRecursive(localGo.transform, "Left_Hand_Target")!.gameObject;
+            var rightHand = TransformUtils.FindChildRecursive(localGo.transform, "Right_Hand_Target")!.gameObject;
+            
             controller = localGo.GetComponent<PlayerController>();
             
             if (controller == null)
             {
                 controller = localGo.AddComponent<PlayerController>();
-                controller.Initialize(netId, steamId, username, isLocal);
+                controller.Initialize(netId, steamId, username, isLocal, leftHand, rightHand);
             }
             
             // TODO: Fix this
@@ -108,26 +161,19 @@ public class PlayerManager : MonoBehaviour
         }
         else
         {
-            var remoteGo = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            remoteGo.name = $"RemotePlayer_{username}_{netId}";
-            DontDestroyOnLoad(remoteGo);
+            var remoteGo = CreatePrimitivePrefab(netId, username);
 
-            if (remoteGo.TryGetComponent(out Collider capsuleCollider))
-            {
-                capsuleCollider.isTrigger = true;
-            }
-
-            if (remoteGo.TryGetComponent(out Renderer renderer))
-            {
-                renderer.material.color = Color.cyan; // Fren
-            }
-
-            controller = remoteGo.GetComponent<PlayerController>();
+            controller = remoteGo["body"].GetComponent<PlayerController>();
             
             if (controller == null)
             {
-                controller = remoteGo.AddComponent<PlayerController>();
-                controller.Initialize(netId, steamId, username, isLocal);
+                controller = remoteGo["body"].AddComponent<PlayerController>();
+                controller.Initialize(netId,
+                    steamId,
+                    username,
+                    isLocal,
+                    remoteGo["leftHand"],
+                    remoteGo["rightHand"]);
             }
         }
         
@@ -158,12 +204,14 @@ public class PlayerManager : MonoBehaviour
         Quaternion rot = data.Rotation;
         string leftItem = data.LeftItemName;
         string rightItem = data.RightItemName;
+        Vector3 leftHandPosition = data.LeftHandPosition;
+        Vector3 rightHandPosition = data.RightHandPosition;
 
         if (Instance.ActivePlayers.TryGetValue(netId, out var player))
         {
             if (!player.IsLocal && player.Receiver != null)
             {
-                player.Receiver.ApplyNetworkData(pos, rot, leftItem, rightItem);
+                player.Receiver.ApplyNetworkData(pos, rot, leftItem, rightItem, leftHandPosition, rightHandPosition);
             }
         }
     }

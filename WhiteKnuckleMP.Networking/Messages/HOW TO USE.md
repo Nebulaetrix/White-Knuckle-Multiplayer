@@ -90,10 +90,10 @@ To register your custom message with the network system, add it to the `MessageI
 
 ```csharp
 // Existing code...
-    public enum MessageId : ushort
+    public static class MessageIds
     {
         // ... other message IDs ...
-        CustomSync, // <- Add own message id
+        public const ushort CustomSync = 50, // <- Add own message id
     }
 // Rest of existing code...
 ```
