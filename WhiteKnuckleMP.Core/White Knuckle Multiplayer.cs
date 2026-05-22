@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using WhiteKnuckleMP.Framework.Managers;
@@ -24,7 +25,8 @@ public class WkMultiplayer : BaseUnityPlugin
     private bool _engineSetup;
     
     private CommandManager _commandManager;
-    
+
+    private Harmony _harmony = new($"{GUID}.patches");
     
 
     private void Awake()
@@ -100,9 +102,12 @@ public class WkMultiplayer : BaseUnityPlugin
 
         engine.AddComponent<StateManager>();
         engine.AddComponent<NetworkManager>();
+        engine.AddComponent<NetworkItemManager>();
         engine.AddComponent<PlayerManager>();
         engine.AddComponent<LobbyManager>();
         LogManager.Info("WhiteKnuckleMP Engine was successfully setup!");
+
+        _harmony.PatchAll();
         _engineSetup = true;
     }
     

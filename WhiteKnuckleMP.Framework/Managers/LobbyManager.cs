@@ -88,6 +88,7 @@ public class LobbyManager : MonoBehaviour
         }
 
         using var packet = new NetworkPacket(MessageIds.ClientReady);
+        StateManager.Instance.TransitionTo(StateManager.State.InGame);
         NetworkManager.Instance.Client.Send(packet.RawMessage);
     }
 

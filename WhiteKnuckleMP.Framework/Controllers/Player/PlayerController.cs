@@ -17,8 +17,8 @@ public class PlayerController : MonoBehaviour
     public PlayerEquipmentManager? Equipment { get; private set; }
 
     // Hand Data
-    public GameObject LeftHand { get; private set; }
-    public GameObject RightHand { get; private set; }
+    public GameObject LeftHand { get; private set; } = null!;
+    public GameObject RightHand { get; private set; } = null!;
 
     /// <summary>
     /// Called by the PlayerManager when this player is spawned into the world.
